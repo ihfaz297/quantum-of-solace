@@ -3,6 +3,7 @@
 from collections import Counter
 
 from .heavyhex import HeavyHex
+from .experiments import girth
 
 
 def check(W, Ht, verbose=False):
@@ -66,6 +67,15 @@ def check(W, Ht, verbose=False):
                 worst_ratio = (a, b)
     res["upper_bound_tight_pairs"] = tight
     res["worst_(d_X,d_Gamma)"] = worst_ratio
+    # girth: every cycle of X is the subdivision of a cycle of H, and H has
+    # girth 6, so girth(X) = 12 whenever there is a face at all.
+    idx = g.index
+    edges = {tuple(sorted((idx[u], idx[v]))) for u in g.vertices for v in g.adj[u]}
+    gi = girth(len(g.vertices), edges)
+    res["girth"] = gi
+    has_face = g.A >= 1 and g.B >= 1
+    if (has_face and gi != 12) or (not has_face and gi != float("inf")):
+        fails.append(f"girth {gi} unexpected for A={g.A}, B={g.B}")
     res["ok"] = not fails
     res["failures"] = fails[:6]
     if verbose:

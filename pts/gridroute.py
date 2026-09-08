@@ -1,10 +1,18 @@
 """Column-row-column routing of an arbitrary permutation on a rectangular mesh.
 
-Classical three-phase scheme: a Koenig decomposition of the column-to-column
-demand fixes which token of each source column travels in which row; then rows
-carry tokens to their target columns and columns to their target rows.  Each
-phase is odd-even transposition sort on disjoint paths, so the whole schedule
-uses at most 2(B+1) + (A+1) rounds -- linear in the mesh diameter.
+This is NOT a contribution of the thesis.  It is the proof of Alon, Chung &
+Graham's Cartesian-product theorem rt(G x H) <= 2 rt(G) + rt(H) (SIAM J.
+Discrete Math. 7(3), 1994), instantiated with rt(P_n) = n; see Alpert et al.,
+Computational Geometry 2022, Theorem 4 for the rectangular-grid statement.  A Koenig decomposition of the column-to-column demand fixes which
+token of each source column travels in which row; then rows carry tokens to
+their target columns and columns to their target rows.  Each phase is odd-even
+transposition sort on disjoint paths, so the schedule uses at most
+2(B+1) + (A+1) rounds -- linear in the mesh diameter.
+
+Caveat: this hard-codes the column-row-column orientation, so on tall meshes it
+is weaker than ACG's 2 min + max bound (e.g. 19 rounds vs 14 on a 3 x 8 mesh).
+BGS's Algorithm 6 is the same three-phase idea with a per-instance analysis,
+2 d_max + 2h; that is what Tier 2 of REVIEW.md plugs in.
 """
 
 from collections import defaultdict

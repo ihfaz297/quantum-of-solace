@@ -5,20 +5,29 @@ import random
 
 from .heavyhex import HeavyHex
 from .router import solve, replay
+from .check_lemma2 import low_lb_permutation
 
 
-def run(W, Ht, trials=10, seed=0):
+def run(W, Ht, trials=10, seed=0, low_lb=None):
+    """low_lb=None: uniformly random pi.  low_lb=k: compose k random
+    matchings (LB_X <= k), the regime where the router's stretch shows."""
     g = HeavyHex(W, Ht)
     dx = g.all_distances()
     rng = random.Random(seed)
     out = {"W": W, "Ht": Ht, "n": len(g.vertices), "ok": True, "why": "ok",
-           "ratios": [], "lift": 0, "colours": 0, "pathlen": 0, "final": 0}
+           "ratios": [], "lift": 0, "colours": 0, "pathlen": 0, "final": 0,
+           "max_rounds": 0}
 
     for _ in range(trials):
-        tgt = g.vertices[:]
-        rng.shuffle(tgt)
-        pi = dict(zip(g.vertices, tgt))
+        if low_lb is None:
+            tgt = g.vertices[:]
+            rng.shuffle(tgt)
+            pi = dict(zip(g.vertices, tgt))
+        else:
+            pi = low_lb_permutation(g, low_lb, rng)
         lb = max(dx[v][pi[v]] for v in g.vertices)
+        if lb == 0:
+            continue
 
         sched, st = solve(g, pi)
         ok, why = replay(g, sched, pi)
@@ -27,6 +36,7 @@ def run(W, Ht, trials=10, seed=0):
             return out
 
         out["ratios"].append(st.rounds / lb if lb else 0.0)
+        out["max_rounds"] = max(out["max_rounds"], st.rounds)
         out["lift"] = max(out["lift"], max(st.lift_cost, default=0))
         out["colours"] = max(out["colours"], max(st.colours, default=0))
         out["pathlen"] = max(out["pathlen"], st.path_len)
