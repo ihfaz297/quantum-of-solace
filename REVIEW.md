@@ -42,10 +42,37 @@ It is not. From arXiv:2411.18581v2 (Bansal, Gunluk & Shapley):
 | — | **Thm 5(b):** the stretch factor of `d_max` on `n`-cycles is between `n-1` and `n` |
 
 So `sigma(grid) = O(1)` is **open**, and it is open in the same paper the note
-cites for it. Section 5 already spotted the smell — "the stretch factor of the
+cites for it — BGS Section 8, verbatim: "While we provide an upper bound for the
+stretch factor on grid graphs, pinning it down asymptotically remains an open
+question." Section 5 already spotted the smell — "the stretch factor of the
 *cycle* family is infinite ... so BGS's constant-factor approximation for cycles
 cannot be relative to `LB`" — and that instinct was exactly right. It just
 resolves the wrong way: the grid guarantee is *also* not relative to `LB`.
+
+Two further facts from the paper itself, both load-bearing:
+
+- **`2*OPT + 2h` is not a constant-factor approximation.** The additive term
+  grows with the instance: when `OPT = O(1)` and `h` is large, the ratio is
+  unbounded. BGS's cycle (`2*OPT + 1`), subdivided-star (`<= 5*OPT + 1`) and
+  ladder (`2*OPT + 2`) bounds are genuine constant-factor; the general grid bound
+  is not. The thesis proposal's Section 3 sentence — "constant-factor
+  approximations for cycles, subdivided stars, and grids" — is therefore wrong
+  for grids, and section 7 below corrects my earlier statement that it was fine.
+- **BGS explicitly refute a prior O(1)-approximation claim on grids** (Section
+  1.3): "the introduction of [1] claims that [9] provided an O(1)-approximation
+  algorithm for the problem on grid graphs. However, this claim is incorrect
+  since [9] considers a variant ... where one is allowed to rotate the tokens
+  along a cycle in one step." ([9] is Demaine, Fekete, Keldenich, Meijer &
+  Scheffer, *Coordinated motion planning ... with bounded stretch*.) That is the
+  exact shape of Assumption (G), refuted in print by the people the note cites
+  for it. Quote this in the proposal to pre-empt "Demaine et al. already did
+  grids".
+
+Citation hygiene: `h` is the SHORT side (`h <= n` is a hypothesis); `h >= 3`
+appears in the Section 1.2 case split but the Section 6 proof does not use it.
+Remark numbering shifted between arXiv v1 and v2 — cite "Remark 14 (v2)". The
+journal reference (Discrete Applied Mathematics 377, 2025) is search-derived and
+paywalled; verify it through institutional access before it goes in a bibliography.
 
 Three consequences, all in sections 5 and 7:
 
@@ -100,12 +127,34 @@ router using `O(A + B) = O(diam X)` rounds for *every* permutation, so
 rt(X) = Theta(diam X) = Theta(sqrt n)   for square patches,
 ```
 
-the lower bound being trivial. No assumption, no open problem. I have not found
-this stated anywhere for heavy-hex, and it is strictly better than the `O(n)`
-that follows from Alon-Chung-Graham or from Weidenfeller et al.'s
-`n + sqrt(n) + 61`. **If you write up nothing else, write up this.**
+the lower bound being trivial. No assumption, no open problem.
 
-**Tier 2 — conditional on BGS Remark 14.** Chaining
+**But it is already published, under a different name.** Yuan & Zhang, *Full
+Characterization of the Depth Overhead for Quantum Circuit Compilation with
+Arbitrary Qubit Connectivity Constraint*, Quantum 9, 1757 (2025),
+arXiv:2402.02403, Theorem 9, bound the routing number of `Brickwall^{b1,b2}`
+graphs and state "in IBM's brick wall chips, b1 = 3 and b2 = 5." Checked
+against `pts/heavyhex.py`: `X = S(H)` is exactly `Brickwall^{3,5}` (12-cycle
+bricks, 3 vertices per vertical side, 5 per horizontal, girth 12). With
+`rt >= diam`, their theorem already gives `rt(X) = Theta(diam X)`. They never
+write "hex", "token swapping" or "stretch factor"; BGS do not cite them and
+they do not cite BGS. An earlier version of this review said "I have not found
+this stated anywhere ... if you write up nothing else, write up this" — wrong,
+and the reason it was wrong is that I searched by the name the token-swapping
+literature uses, not the name the routing-number literature uses.
+
+So Tier 1 is an **independent reproof by a different method**, and it should be
+presented as corroboration and as a worked instantiation of the reduction. Its
+measured constant (~23x diam) is not demonstrably better than Yuan-Zhang's, so
+do not argue the constant. What Yuan-Zhang do *not* have — and what no published
+reduction has — is the **per-instance** transfer `LB_Gamma(sigma_r) <= LB_X(pi)`
+from Lemma 2. Theirs is worst-case only. That per-instance property is what
+makes Tiers 2 and 3, and any future stretch-factor result, possible. **That is
+the thesis's contribution; rewrite the novelty claim around it.**
+
+**Tier 2 — via BGS Remark 14, which is a proved corollary of Thm 4(b), not a
+conjecture.** ("Conditional" here means it imports a cited black box, unlike
+Tier 1; it does not mean the black box is uncertain.) Chaining
 `OPT_Gamma(sigma_r) <= O(h) * LB_Gamma(sigma_r) <= O(h) * LB_X(pi)` through
 Thm 4(b) gives `sigma(X) = O(h)`, `h` the short side of `Gamma`. A refinement of
 Tier 1 for long thin patches and low-`LB` permutations.
@@ -117,9 +166,13 @@ The reduction also means **any future grid result transfers to heavy-hex for
 free**. That is a better selling point than a constant nobody can evaluate.
 
 **The question worth asking next:** is there a reduction the *other* way, from
-grid PTS to heavy-hex PTS? If yes, `sigma(heavy-hex) = Theta(sigma(grid))` and
-RQ2 is *equivalent* to a problem BGS left open — which is important for the
-thesis to know, and which turns a failure into a publishable theorem.
+grid PTS to heavy-hex PTS? Tier 3 gives only `sigma(grid) = O(1) =>
+sigma(heavy-hex) = O(1)`. The converse is **not** established — nothing here
+shows that a finite `sigma(heavy-hex)` would force a finite `sigma(grid)`. If a
+reverse reduction exists, `sigma(heavy-hex) = Theta(sigma(grid))` and RQ2 becomes
+equivalent to BGS's open question; until then, the honest statement is one-way.
+(An earlier version of this review said "very likely equivalent"; that was an
+overclaim.)
 
 ---
 
@@ -207,7 +260,19 @@ supports `>= 11` instead of undercutting it.
 
 Proving it needs the six degree-2 subdivision vertices on a face to block
 shortcuts. That now looks like a real theorem rather than a hopeful one, and it
-is the most promising short paper in the pile.
+is the most promising short paper in the pile. Two honest caveats on the
+evidence and the difficulty:
+
+- The probe covers `m = 4` and `m = 6` only. Extrapolating to a 12-cycle with six
+  outward legs is an extrapolation; the code labels the row CONSISTENT, not
+  proved.
+- BGS's published template (Theorem 1 proof, giving `OPT = n - 1` for rotating
+  `C_n`) is a **charging argument**: a charge conserved because every swap on a
+  cycle moves one token clockwise and one counter-clockwise. Legs break that
+  conservation law outright — a swap on a leg edge has no clockwise sense — so
+  the proof for `X` must *redefine* the conserved quantity, not bolt a side
+  lemma onto BGS's. Harder than it looks, but the template is citable and the
+  experiments say the theorem is true.
 
 **`fork.txt.txt` is superseded, but section 6's table mis-attributes its
 failure.** Its Lemma 2 is actually *correct* — `H` really is the square grid on
@@ -241,9 +306,10 @@ securing the threshold deliverable first is the right instinct. Four changes:
    quotient. It is better and it already works. Keep the backup route.
 2. **Section 4, RQ2.** Reframe: *"Does heavy-hex PTS reduce to grid PTS, and is
    the reduction tight?"* That question is answerable — half of it is answered
-   above — whereas "does heavy-hex admit a constant-factor approximation" is
-   very likely equivalent to a problem BGS left open. Do not aim an
-   undergraduate thesis at that without saying so out loud.
+   above — whereas "does heavy-hex admit a constant-factor approximation" sits
+   downstream of a problem BGS left open (Tier 3 gives the one-way implication;
+   the converse is unproved). Do not aim an undergraduate thesis at that
+   without saying so out loud.
 3. **Section 6, decision gate.** Tier 1 (`rt(X) = Theta(diam X)`) is done and
    unconditional. That already clears the week-16 gate's "proven stretch-factor
    bound for at least one heavy-hex family" if the gate is worded as a
@@ -255,8 +321,13 @@ securing the threshold deliverable first is the right instinct. Four changes:
 
 Section 11 references are accurate. Section 3's characterisation of BGS ("give
 the first constant-factor approximations for cycles, subdivided stars, and
-grids, and analyze stretch-factor tightness") is correct as written — the
-proposal never made the mistake the proof note made.
+grids") is **wrong for grids** — the grid bound is `2*OPT + 2h`, additive in the
+short side, not constant-factor (section 2 above). An earlier version of this
+review called that sentence correct; it is not. Cycles and subdivided stars are
+fine. Fix the sentence and add BGS's own heavy-hex disclaimer (Section 1.1, v2
+only): designing algorithms for "more complex graph topologies (including IBM's
+heavy hex ...) using algorithms for its subgraphs provided in this paper requires
+further research." That is the referee-proof gap statement.
 
 ---
 
