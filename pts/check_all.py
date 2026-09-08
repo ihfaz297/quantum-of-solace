@@ -179,6 +179,30 @@ def main(fast=False):
     print("  space), so it cannot decide whether sigma(heavy-hex) > 11.")
     print("  -> PROVED" if wt else "  -> FAILED")
 
+    banner("SAT certificates  --  bounded model checking (pts/sat.py)")
+    try:
+        from . import sat as satmod
+    except ImportError:
+        print("  python-sat not installed: `pip install python-sat`.  SKIPPED")
+        satmod = None
+    if satmod is not None:
+        sc = True
+        res = satmod.certify_face()
+        sc &= res
+        print(f"  {'ok ' if res else 'FAIL'} face rotation on X(3,1): T=10 UNSAT, T=11 SAT "
+              "-- OPT = 11 certified independently of the winding bound")
+        for inst in satmod.rq1_instances():
+            s, sched, secs, st = satmod.check(inst["n"], inst["edges"], inst["target"], 11)
+            good = s and sched is not None
+            sc &= good
+            print(f"  {'ok ' if good else 'FAIL'} {inst['name']}: n={inst['n']}, "
+                  f"{len(inst['cycle'])}-cycle, {inst['interior']} interior, "
+                  f"T=11 {'SAT' if s else 'UNSAT'} in {secs:.2f}s (schedule replayed)")
+        ok &= sc
+        print("  Both enclosing-cycle witnesses rotate in exactly 11: neither beats")
+        print("  girth - 1.  sigma(heavy-hex) = 11 remains OPEN beyond these instances.")
+        print("  -> VERIFIED" if sc else "  -> FAILED")
+
     banner("Patch model  --  the proposal's formula counts the 2-core")
     tc = True
     for r in two_core_audit():

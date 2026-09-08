@@ -54,7 +54,9 @@ the original proposal:
   it also proves that rotating *any* cycle by one costs at least `girth − 1` in
   *any* graph.
 - **The core implementation exists** and passes a check suite that reproduces
-  every number in this document.
+  every number in this document — including a SAT encoder that certifies the
+  face rotation a second way and settles the two candidate witnesses against
+  `σ = 11` in about a second each: both cost exactly 11.
 
 The original headline — a constant-factor approximation for heavy-hex — was
 for a period believed proved. Its proof rested on a grid guarantee attributed
@@ -460,6 +462,18 @@ table"); all 229 permutations of the `3 × 3` grid with `LB ≤ 1` have `OPT ≤
 grid. Both are constants against BGS's asymptotic question and are recorded as
 first data points only.
 
+**Corollary B4 (the two enclosing-cycle witnesses) — VERIFIED by SAT, schedules
+replayed (suite: "SAT certificates").** The 20-cycle bounding two fused faces
+(2-core of the `2 × 1` patch, `n = 21`, one interior vertex) and the 24-cycle
+around a branch vertex (2-core of the `2 × 2` patch, `n = 35`, four interior
+vertices) both rotate in exactly 11 rounds at `LB = 1`: `T = 11` is
+satisfiable, in 0.2 s and 1.1 s respectively, and the face rotation on `X(3,1)`
+is `UNSAT` at `T = 10` and `SAT` at `T = 11`. Neither enclosing cycle beats
+`girth − 1`. `pts/sat.py` is a bounded-model-checking encoding (one Boolean
+per edge per round, one per token-position per round; ~15,000 variables and
+~300,000 clauses at `n = 35`) solved by CaDiCaL; it agrees with the exact BFS
+solver on all twelve small instances of the suite.
+
 **Limitation (ceiling) — PROVED.** On a planar graph the bounded faces generate
 the cycle space, so an `ω` vanishing on every face is a coboundary and forces
 `D = 0`; hence `D ≠ 0` requires `ω(F) ≠ 0` for some face `F`, and `g_ω ≤ |F|`.
@@ -483,7 +497,8 @@ VERIFIED), so Theorem B never exceeds 11 there. **It cannot decide whether
 | Theorem B | PROVED; stress-tested, 0 violations | suite "Winding theorem"; `winding.py` |
 | girth law | PROVED; VERIFIED 15 hosts | suite "Winding probe" |
 | `σ(heavy-hex) ≥ 11` | PROVED | suite "Winding theorem" |
-| `σ(heavy-hex) = 11` | OPEN (RQ1); Theorem B cannot decide it | — |
+| the 20- and 24-cycle witnesses cost exactly 11 | VERIFIED by SAT, replayed | suite "SAT certificates" |
+| `σ(heavy-hex) = 11` | OPEN (RQ1); Theorem B cannot decide it; the two named witnesses do not refute it | — |
 | `σ(square grids) ≥ 4` | PROVED by computation | suite "Section 5 table" |
 | `OPT_Γ(σ_r) = O(OPT_X(π))` | OPEN (RQ2b) | — |
 | patch formula = 2-core count | VERIFIED 6 shapes | suite "Patch model" |
@@ -496,16 +511,20 @@ VERIFIED), so Theorem B never exceeds 11 there. **It cannot decide whether
 ## 5. Research questions
 
 **RQ1 (lower bound).** `σ(heavy-hex) ≥ 11` is PROVED. Is it tight? Theorem B
-cannot say. The candidate witnesses are the 20-cycle bounding two fused faces
-and the 24-cycle around a branch vertex, which encloses four interior vertices
-— the heavy-hex analogue of the `3 × 3` grid's centre. Because routing number
-is not monotone under subgraphs, the instances must be run on *family members*,
-not on the minimal subgraphs: the 20-cycle in the 2-core of the `2 × 1` patch
-(`n = 21`) and the 24-cycle in the 2-core of the `2 × 2` patch (`n = 35`).
-`UNSAT` at `T = 11` on either gives `σ > 11`; `SAT` on both gives the witness
-schedules and the conjecture `σ = 11` for the `LB = 1` slice. An `LB = 2`
-instance with `OPT ≥ 23` would also do it; that slice is not enumerable and the
-thesis says which slice each result covers.
+cannot say. The two candidate witnesses named by the audit — the 20-cycle
+bounding two fused faces and the 24-cycle around a branch vertex, the heavy-hex
+analogue of the `3 × 3` grid's centre — have been run on genuine family members
+(the 2-cores of the `2 × 1` and `2 × 2` patches, since routing number is not
+monotone under subgraphs) and **both cost exactly 11** (Corollary B4). So the
+obvious enclosing cycles do not refute `σ = 11`. What would settle the `LB = 1`
+slice on a patch is the full enumeration: a permutation has `LB = 1` iff it
+rotates a set of vertex-disjoint cycles and edges, in either orientation, and
+each such system is one SAT call of about a second. That enumeration on the
+`2 × 2` patch is the next experiment; its outcome is either a witness with
+`OPT ≥ 12` (`σ > 11`) or the statement "`σ = 11` on the `LB = 1` slice of the
+`2 × 2` patch", CONJECTURED for larger patches. An `LB = 2` instance with
+`OPT ≥ 23` would also do it; that slice is not enumerable, and the thesis says
+which slice each result covers.
 
 **RQ2 (reduction).** (a) *Does heavy-hex PTS reduce to grid PTS preserving the
 per-instance geodesic bound?* Yes — Theorem A. (b) *Is the reduction tight* —
@@ -541,12 +560,13 @@ on the theory arm, and each arm has dated milestones.
 
 **Phase 1 — Instruments (weeks 1–8).**
 
-- *Weeks 1–2:* a SAT encoder for "is there a schedule of length `≤ T`?" (one
-  Boolean per edge per round; at-most-one matched edge per vertex per round;
-  token-position variables with swap semantics), validated against the exact
-  BFS solver on every `n ≤ 12` instance in the suite, and a **feasibility
-  estimate on the `n = 21` RQ1 instance**. This decides how Phase 3 spends its
-  time.
+- *Done (`pts/sat.py`):* a SAT encoder for "is there a schedule of length
+  `≤ T`?", validated against the exact BFS solver on twelve suite instances,
+  with the two RQ1 witnesses decided (Corollary B4). The feasibility estimate
+  the original plan budgeted a week for is: about one second at `n = 35`,
+  `T = 11`. *Weeks 1–3:* the `LB = 1` enumerator over disjoint cycle systems
+  (both orientations) driving the SAT encoder, run on the `2 × 2` patch; then
+  `LB = 2` probes with a time cap.
 - *Weeks 2–5:* BGS Algorithm 6 as a parallel router with its short-side
   orientation and an `LB`-relative test (`≤ 2·d_max + 2h`) in the suite.
   **Milestone M1, week 5:** that test passes.
@@ -574,11 +594,14 @@ on the theory arm, and each arm has dated milestones.
 - A theory note — reduction, winding bound, corollaries, ceiling — ready for
   the supervisor by week 14.
 
-**Phase 3 — RQ1 (weeks 5–16).** SAT at `T = 11` on the `n = 21` instance, then
-the `n = 35` instance if feasible; `T = 12, 13` for witnesses. `LB = 1`
-enumeration on the `2 × 2` patch. Grids: `4 × 4` and `3 × 5` at `LB ≤ 1` by
-SAT, to see whether grid stretch grows at small sizes — cheap and informative
-for RQ2(c). Then a proof attempt in whichever direction the computation points.
+**Phase 3 — RQ1 (weeks 3–16).** The `LB = 1` enumeration on the `2 × 2`
+patch (every disjoint cycle system, both orientations, one SAT call each);
+then the `3 × 2` patch if the count allows. Grids: `4 × 4` and `3 × 5` at
+`LB ≤ 1` by SAT, to see whether grid stretch grows at small sizes — cheap and
+informative for RQ2(c). `LB = 2` probes with a time cap. Then a proof attempt
+in whichever direction the computation points: a general upper bound of 11 on
+`LB = 1` rotations of chordless cycle systems, or a lower-bound argument above
+Theorem B's ceiling if a witness appears.
 
 **Decision gate — week 16** (section 7).
 
@@ -630,10 +653,10 @@ arm:
 - **G1 (empirical arm).** Milestones M1 and M2 are green in the suite: BGS
   Algorithm 6 passes its `LB`-relative test, and the router replays on the
   Heron-156 2-core with pendants.
-- **G2 (theory arm).** The SAT run at `T = 11` on the `n = 21` family-member
-  instance has returned a verdict with a certificate (`SAT` schedule or
-  `UNSAT` proof), or has been documented infeasible with runtime and memory
-  figures.
+- **G2 (theory arm).** The `LB = 1` enumeration on the `2 × 2` patch has
+  completed with a certificate for every cycle system (a replayed schedule, or
+  an `UNSAT` verdict at `T = 11` with a DRAT proof), or has been documented
+  infeasible with the count and the runtime figures.
 
 Both hold → Phase 4a. G1 fails → all effort to G1 until it holds; Phase 4a is
 dropped; Phase 5 proceeds. G1 holds, G2 fails → Phase 4b, with SAT left
@@ -670,7 +693,7 @@ each is a test that passes or does not.
 |---|---|---|
 | **Threshold** | Deliverables 1 and 2 minus the BGS algorithms; the theory note with Theorem A and `σ ≥ 11` as PROVED; `rt(X) = Θ(diam)` reconciled with Yuan–Zhang; documented negative results. | **Secured**: the router, exact solver, winding bound and check suite exist and pass; the reconciliation paragraph is owed. |
 | **Threshold, second half** | BGS Algorithms 2–4 and 6 implemented and replayed; the comparative study (Deliverable 4). | **Not started.** Reachable by construction — it depends only on implementing published algorithms and running experiments — but not secured, and the original proposal's front-loading of it is kept for that reason. |
-| **Target** | The reduction and Corollary A2 written for device 2-cores with pendants; the RQ1 `n = 21` instance decided with certificate; an explicit constant for Lemma 3; the novelty sweep closed one way or the other. | Theorems proved for brick rectangles; extensions, SAT and constant outstanding. |
+| **Target** | The reduction and Corollary A2 written for device 2-cores with pendants; the `LB = 1` slice of the `2 × 2` patch decided with certificates; an explicit constant for Lemma 3; the novelty sweep closed one way or the other. | Theorems proved for brick rectangles; the two named RQ1 witnesses decided (both 11); extensions, enumeration and constant outstanding. |
 | **Stretch** | `σ(heavy-hex) = 11` for the `LB = 1` slice, or a witness above 11; the coloured/incomplete corollaries; the `OPT`-pullback on a class; the general bounded-fiber quotient theorem. | Not started; gated. |
 | **Out of scope, stated** | `σ(heavy-hex) = O(1)`; NP-hardness embedded into heavy-hex; constant-competitiveness with Yuan–Zhang. | — |
 
@@ -681,7 +704,7 @@ each is a test that passes or does not.
 | risk | assessment | mitigation |
 |---|---|---|
 | Hard theory (RQ2b, reverse reduction) does not close | likely; may be equivalent to an open problem | gated; Target does not depend on it; eight-week box |
-| SAT infeasible at `n = 35`, `T = 11` | real; no estimate yet | week-2 estimate; the `n = 21` instance first; symmetry breaking; if both stall, RQ1 reverts to CONJECTURED with the ceiling stated, and the encoder still ships |
+| The `LB = 1` enumeration is too large on the `2 × 2` patch | unknown until the cycle systems are counted; each call is ~1 s | count first; symmetry reduction (the patch's reflections); cap at the gate; if it stalls, RQ1 reverts to CONJECTURED on the evidence of the two witnesses, with the ceiling stated |
 | Pendant extension is not routine | real; it changes fiber size, phase count and constants | three weeks budgeted; fallback is the theorems for brick rectangles with pendants handled by a trivial pre/post phase, stated as such |
 | **Adjacent literature restates a result under different vocabulary** | *it happened once*: Yuan–Zhang say "brick wall", never "hex", and are uncited by BGS | monitor by *structure*: "routing number", "routing via matchings", "permutation routing", "brick wall" + routing; citations to *both* arXiv:2411.18581 and arXiv:2402.02403 in OpenAlex, Semantic Scholar and OpenCitations (they disagree by 5× on the same paper) plus one non-arXiv index; confirm Theorem 9 is in Yuan–Zhang v1 for the priority date |
 | Scooped on RQ1/RQ2 exactly | moderate: BGS has 0–1 citations after 22 months and no follow-up, but Yuan–Zhang has 15 citers and 2026 routing-number papers use quotient machinery | theory note to the supervisor by week 14; preprint if the supervisor agrees (section 11) |
@@ -731,14 +754,18 @@ first half of Threshold.
 No GPU is needed and none would help: exact PTS is breadth-first search over
 token placements, bounded by branching and memory, not arithmetic. Plain BFS
 dies near `n = 12`; the bidirectional solver in `pts/exact.py` reaches `n ≈ 13`
-at depth 6–7 in a minute or two. The instances that decide RQ1 (`n = 21` and
-`35`, `T = 11–13`) need **SAT bounded model checking** (`python-sat`, or Kissat
-via DIMACS); no feasibility estimate exists yet and one is the first
-deliverable. The blank relaxation in `pts/exact.py` is weak on face instances
-and is not a substitute. Two facts shrink the search: `LB = 1` permutations
-are disjoint cycle systems, and the face rotation itself needs no search at
-all — it is proved. Everything else runs on a laptop; the benchmark sweeps
-benefit from a few CPU-days on a shared machine.
+at depth 6–7 in a minute or two. The instances that decide RQ1 need **SAT
+bounded model checking** (`pts/sat.py`, CaDiCaL via `python-sat`), and the
+feasibility question is answered: `n = 35`, `T = 11` takes about a second on a
+laptop, with ~15,000 variables and ~300,000 clauses. What scales is the
+*number* of instances in the `LB = 1` enumeration, not any single one, and that
+is a CPU-hours question, not a hardware one. Reproducibility comes from
+determinism — CaDiCaL is deterministic for a fixed input, every `SAT` answer is
+replayed independently of the solver, and `UNSAT` answers can carry a DRAT
+proof — and from pinned versions and explicit seeds everywhere else. The blank
+relaxation in `pts/exact.py` is weak on face instances and is not a substitute.
+Everything runs on a laptop; the benchmark sweeps benefit from a few CPU-days
+on a shared machine.
 
 ---
 

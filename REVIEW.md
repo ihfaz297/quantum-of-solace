@@ -487,11 +487,17 @@ No GPU. Nothing here is GPU-shaped: exact PTS is breadth-first search over
 token placements, bounded by branching and memory, not arithmetic.
 
 What actually decides the open question is a **SAT encoding** ("is there a
-schedule of length `<= T`?") on two specific instances: the 20-cycle bounding
-two fused faces (n ~ 22, T = 12) and the 24-cycle around a branch vertex
-(n ~ 28, T ~ 13), both present in `HeavyHex(5,2)`. UNSAT at `T = 11` on either
-would give `sigma(heavy-hex) > 11`. `python-sat` (not installed here) or
-Kissat via DIMACS. No feasibility estimate has been made; budget a week.
+schedule of length `<= T`?"). It now exists (`pts/sat.py`, CaDiCaL via
+`python-sat`), agrees with the exact solver on twelve instances, certifies the
+face rotation a second way (`T = 10` UNSAT, `T = 11` SAT), and has settled the
+two witnesses named above — run on genuine family members, since routing number
+is not monotone under subgraphs: the 20-cycle in the 2-core of the `2x1` patch
+(n = 21) and the 24-cycle in the 2-core of the `2x2` patch (n = 35) both rotate
+in exactly 11, in 0.2 s and 1.1 s. Neither beats `girth - 1`. The "week" the
+first version of this review budgeted for a feasibility estimate was a
+misjudgement by three orders of magnitude. The live question is now the full
+`LB = 1` enumeration over disjoint cycle systems on the `2x2` patch, one SAT
+call each.
 
 Two things that are cheaper than they look: (a) a permutation has `LB = 1`
 iff it rotates a set of vertex-disjoint cycles and edges, so "max `OPT` over
