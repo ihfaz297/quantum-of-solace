@@ -1,0 +1,87 @@
+name: checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "17 3 * * 1"          # Mondays 03:17 UTC: the full suite
+  workflow_dispatch:
+    inputs:
+      W:
+        description: "brick-wall width (odd); patch is (W-1)/2 x Ht"
+        default: "7"
+      Ht:
+        description: "brick-wall height"
+        default: "3"
+      T:
+        description: "round budget to test"
+        default: "11"
+
+permissions:
+  contents: read
+
+jobs:
+  # every push: the fast suite (about 15 s)
+  fast:
+    if: github.event_name == 'push' || github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: pip install python-sat==1.9.dev15
+      - run: python -m pts.check_all --fast
+
+  # weekly: the full suite (about 5 min)
+  full:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: pip install python-sat==1.9.dev15
+      - run: python -m pts.check_all
+
+  # on demand: the LB = 1 slice of one patch, resumable across runs.
+  # Results go to an artifact, never to a commit (the owner's machine
+  # watches origin/HEAD).  To resume, the job downloads the newest
+  # artifact of the same name from an earlier run of this workflow.
+  lb1:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    env:
+      LOG: results/lb1_${{ inputs.W }}_${{ inputs.Ht }}.jsonl
+      NAME: lb1-${{ inputs.W }}-${{ inputs.Ht }}-T${{ inputs.T }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: pip install python-sat==1.9.dev15
+      - name: resume from the previous run's log, if any
+        uses: dawidd6/action-download-artifact@v6
+        continue-on-error: true
+        with:
+          workflow: checks.yml
+          name: ${{ env.NAME }}
+          path: results
+          search_artifacts: true
+          if_no_artifact_found: ignore
+      - name: enumerate
+        run: |
+          mkdir -p results
+          PYTHONUNBUFFERED=1 python -m pts.lb1 ${{ inputs.W }} ${{ inputs.Ht }} ${{ inputs.T }} --log=$LOG | tee results/${NAME}.txt
+      - name: keep the log even if the job is cancelled or times out
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.NAME }}
+          path: |
+            results/lb1_${{ inputs.W }}_${{ inputs.Ht }}.jsonl
+            results/${{ env.NAME }}.txt
+          if-no-files-found: warn

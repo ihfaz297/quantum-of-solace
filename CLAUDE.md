@@ -28,6 +28,8 @@ python -m pts.check_all --fast   # same minus the m = 8 rows, ~5-15 s
 python -m pts.winding            # the winding lower bound: stress test + heavy-hex face
 python -m pts.sat                # SAT encoder: validation vs exact, face certificate, RQ1 n=21
 python -m pts.sat --big          # ... plus the n = 35 instance (~1 s)
+python -m pts.lb1                # the whole LB = 1 slice of the 2 x 2 patch: 34 SAT calls, ~25 s
+python -m pts.lb1 7 3 11         # same for X(7,3) (3 x 3 patch); args are W Ht T
 python -m pts.scaling            # diameter and lifting-constant scaling to n = 480
 python -m pts.check_lemma1       # or check_lemma2 / check_algorithm, individually
 ```
@@ -73,6 +75,11 @@ usable to `n ~ 13` at depth 6-7 (the `C_8` + hub instance takes ~90 s).
 `sat.check` is bounded model checking ("schedule of `<= T` rounds?") via
 CaDiCaL; `n = 35`, `T = 11` takes about a second. Every SAT answer is replayed
 independently of the solver. Prefer `sat` for anything beyond `n = 12`.
+`lb1.enumerate_patch` decides the whole `LB = 1` slice of a patch by the
+locality reduction (its module docstring is the proof sketch): one SAT call
+per (simple cycle, `LB = 1` permutation of the cycle's interior), each on the
+induced subgraph of the cycle's closed region, cycles enumerated as boundaries
+of face unions and cross-checked against a DFS count.
 
 **Lower bounds.** `winding.bound` implements the winding (cohomological)
 theorem `OPT >= g_omega - max|Q_v|`; `winding.girth_law_bound` is its
@@ -106,6 +113,13 @@ sequences them and is what the documents' **VERIFIED** labels refer to.
   6, not 7 (girth drops to 6). The law is `OPT >= girth - 1`, and the winding
   probe must include `m = 8`.
 - `girth()` returns `inf` for forests (`A = 0` or `B = 0` patches are trees).
+- **The `LB = 1` enumeration must include nested cycles.** A cycle system
+  splits into outermost cycles; each region instance ranges over every
+  `LB = 1` permutation of the interior — cycles lying inside (both
+  orientations) *and* matchings. Two-row patches (`Ht = 2`) have no nested
+  cycles, so a version that forgot them would pass there and be wrong on
+  `3 x 3`. Orientation of the outermost cycle is irrelevant (`OPT` of a
+  permutation equals `OPT` of its inverse).
 - Literature facts that are easy to get wrong: BGS's grid bound is
   `2*OPT + 2h` (not constant-factor) and the grid stretch factor is open in
   their paper; `rt(heavy-hex) = Theta(diam)` is a corollary of Yuan & Zhang

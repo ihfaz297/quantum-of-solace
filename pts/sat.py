@@ -239,6 +239,7 @@ def union_boundary(g, faces):
             break
         cyc.append(nxt)
         prev, cur = cur, nxt
+    assert len(cyc) == len(boundary), "union boundary is not connected"
     interior = inside - set(cyc)
     return cyc, interior
 

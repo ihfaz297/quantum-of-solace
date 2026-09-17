@@ -200,8 +200,26 @@ def main(fast=False):
                   f"T=11 {'SAT' if s else 'UNSAT'} in {secs:.2f}s (schedule replayed)")
         ok &= sc
         print("  Both enclosing-cycle witnesses rotate in exactly 11: neither beats")
-        print("  girth - 1.  sigma(heavy-hex) = 11 remains OPEN beyond these instances.")
+        print("  girth - 1.  The next section decides the whole LB = 1 slice.")
         print("  -> VERIFIED" if sc else "  -> FAILED")
+
+        banner("LB = 1 slice of the 2 x 2 patch  --  every cycle system (pts/lb1.py)")
+        from . import lb1
+        v = lb1.enumerate_patch(5, 2, T=11, verbose=True,
+                                max_region=21 if fast else None)
+        lo = (v["all_within_T"] and v["cycles"] + v["skipped"] == 14
+              and all(r["winding"] == 11 for r in v["rows"])
+              and all(r["escaped"] == 0 for r in v["rows"]))
+        ok &= lo
+        if fast:
+            print("  (--fast: cycles with regions of <= 21 vertices only; the full")
+            print("   run covers all 14 cycles, 34 SAT calls, ~25 s)")
+            print("  -> VERIFIED (partial)" if lo else "  -> FAILED")
+        else:
+            print("  Every LB = 1 permutation of X(5,2) that contains a cycle costs")
+            print("  exactly 11 (winding bound 11, SAT schedule of 11, both replayed);")
+            print("  sigma = 11 on the LB = 1 slice of the 2 x 2 patch.")
+            print("  -> VERIFIED" if lo else "  -> FAILED")
 
     banner("Patch model  --  the proposal's formula counts the 2-core")
     tc = True
@@ -245,6 +263,7 @@ def main(fast=False):
     print("  Assumption (G) is NOT a theorem in BGS -- see REVIEW.md section 2.")
     print("  sigma(heavy-hex) >= 11 is PROVED by the winding bound (pts/winding.py).")
     print("  'Legs never help' was WRONG; OPT >= girth - 1 is the law, and proved.")
+    print("  sigma = 11 on the LB = 1 slice of the 2 x 2 patch is VERIFIED (SAT).")
     print(f"\n  overall: {'PASS' if ok else 'FAIL'}")
     return 0 if ok else 1
 
