@@ -1,0 +1,60 @@
+name: lb1-batch
+
+# The LB = 1 enumerations that are too long for a laptop on an unreliable
+# mains supply.  Runs whenever this file is pushed (edit the matrix to queue
+# more).  Each job resumes from the newest artifact of its own name, and
+# before that from whatever partial log is committed under results/, so a
+# cancelled, timed-out or re-pushed job never repeats a finished cycle.
+# Results stay in artifacts; nothing here commits.
+
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/lb1-batch.yml"]
+
+permissions:
+  contents: read
+
+jobs:
+  lb1:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { W: 9,  Ht: 2, T: 11 }     # 4 x 2 patch, n = 63, 133 cycles
+          - { W: 7,  Ht: 3, T: 11 }     # 3 x 3 patch, n = 68, 288 cycles
+          - { W: 11, Ht: 2, T: 11 }     # 5 x 2 patch, n = 77
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    env:
+      LOG: results/lb1_${{ matrix.W }}_${{ matrix.Ht }}.jsonl
+      NAME: lb1-${{ matrix.W }}-${{ matrix.Ht }}-T${{ matrix.T }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: pip install python-sat==1.9.dev15
+      - name: resume from the previous run's artifact, if any
+        uses: dawidd6/action-download-artifact@v6
+        continue-on-error: true
+        with:
+          workflow: lb1-batch.yml
+          name: ${{ env.NAME }}
+          path: results
+          search_artifacts: true
+          if_no_artifact_found: ignore
+      - name: enumerate
+        run: |
+          mkdir -p results
+          echo "resuming from $(wc -l < $LOG 2>/dev/null || echo 0) finished cycles"
+          PYTHONUNBUFFERED=1 python -m pts.lb1 ${{ matrix.W }} ${{ matrix.Ht }} ${{ matrix.T }} --log=$LOG | tee results/${NAME}.txt
+      - name: keep the log even if the job is cancelled or times out
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.NAME }}
+          path: |
+            ${{ env.LOG }}
+            results/${{ env.NAME }}.txt
+          if-no-files-found: warn
