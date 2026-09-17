@@ -495,9 +495,22 @@ is not monotone under subgraphs: the 20-cycle in the 2-core of the `2x1` patch
 (n = 21) and the 24-cycle in the 2-core of the `2x2` patch (n = 35) both rotate
 in exactly 11, in 0.2 s and 1.1 s. Neither beats `girth - 1`. The "week" the
 first version of this review budgeted for a feasibility estimate was a
-misjudgement by three orders of magnitude. The live question is now the full
-`LB = 1` enumeration over disjoint cycle systems on the `2x2` patch, one SAT
-call each.
+misjudgement by three orders of magnitude.
+
+The `LB = 1` enumeration on the `2x2` patch is now done (`pts/lb1.py`, suite
+section "LB = 1 slice"). Counted naively it is 345,564 permutations. Three
+facts reduce it: a permutation has `LB = 1` iff it is a vertex-disjoint system
+of oriented graph cycles and edges; `OPT(pi) = OPT(pi^-1)`; and *locality* — a
+schedule for "rotate the cycle `C` plus any `LB = 1` permutation of the
+vertices inside `C`" that stays inside the closed region of `C` absorbs any
+matching outside the region for free, since no inside vertex has a neighbour
+outside. So the slice is one SAT call per (cycle, `LB = 1` permutation of its
+interior) on the induced subgraph of the region: 14 cycles, 34 calls, all
+`SAT` at `T = 11` in 22 s, every schedule replayed, every instance with
+winding bound 11. **`sigma = 11` on the `LB = 1` slice of the `2x2` patch.**
+The `3x2` patch (`n = 49`) is done too: 46 cycles, 464 instances, all `SAT`
+at 11, 23 min. The `4x2` and `3x3` patches were running at the time of
+writing.
 
 Two things that are cheaper than they look: (a) a permutation has `LB = 1`
 iff it rotates a set of vertex-disjoint cycles and edges, so "max `OPT` over
