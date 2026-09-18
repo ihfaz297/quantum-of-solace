@@ -28,8 +28,9 @@ python -m pts.check_all --fast   # same minus the m = 8 rows, ~5-15 s
 python -m pts.winding            # the winding lower bound: stress test + heavy-hex face
 python -m pts.sat                # SAT encoder: validation vs exact, face certificate, RQ1 n=21
 python -m pts.sat --big          # ... plus the n = 35 instance (~1 s)
-python -m pts.lb1                # the whole LB = 1 slice of the 2 x 2 patch: 34 SAT calls, ~25 s
+python -m pts.lb1                # the whole LB = 1 slice of the 2 x 2 patch: 34 SAT calls, ~6 s
 python -m pts.lb1 7 3 11         # same for X(7,3) (3 x 3 patch); args are W Ht T
+python -m pts.lb1 7 3 11 --log=results/lb1_7_3.jsonl --shard=2/6   # resumable; cycles with index % 6 == 2
 python -m pts.scaling            # diameter and lifting-constant scaling to n = 480
 python -m pts.check_lemma1       # or check_lemma2 / check_algorithm, individually
 ```
@@ -79,7 +80,13 @@ independently of the solver. Prefer `sat` for anything beyond `n = 12`.
 locality reduction (its module docstring is the proof sketch): one SAT call
 per (simple cycle, `LB = 1` permutation of the cycle's interior), each on the
 induced subgraph of the cycle's closed region, cycles enumerated as boundaries
-of face unions and cross-checked against a DFS count.
+of face unions and cross-checked against a DFS count. One incremental CaDiCaL
+instance per cycle (`lb1.RegionSolver`): the interior permutation is a set of
+selector variables fixed by assumptions, so the thousands of instances of a
+large cycle cost milliseconds each after the first. `--separate` is the slow
+one-solver-per-instance path, kept for cross-checking. Nothing prunes the
+interior enumeration: an 11-round schedule for a big cycle needs every
+interior vertex (tested on the 44-cycle of the 4 x 2 patch).
 
 **Lower bounds.** `winding.bound` implements the winding (cohomological)
 theorem `OPT >= g_omega - max|Q_v|`; `winding.girth_law_bound` is its

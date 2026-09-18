@@ -213,7 +213,7 @@ def main(fast=False):
         ok &= lo
         if fast:
             print("  (--fast: cycles with regions of <= 21 vertices only; the full")
-            print("   run covers all 14 cycles, 34 SAT calls, ~25 s)")
+            print("   run covers all 14 cycles, 34 SAT calls, ~6 s)")
             print("  -> VERIFIED (partial)" if lo else "  -> FAILED")
         else:
             print("  Every LB = 1 permutation of X(5,2) that contains a cycle costs")

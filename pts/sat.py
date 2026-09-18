@@ -45,7 +45,7 @@ class Encoding:
     def __init__(self, n, edges, target, T):
         self.n, self.T = n, T
         self.edges = [tuple(sorted(e)) for e in edges]
-        self.target = list(target)
+        self.target = None if target is None else list(target)
         self.nv = 0
         self.x = {}                                  # (e_index, t) -> var
         self.p = {}                                  # (k, v, t)     -> var
@@ -75,9 +75,11 @@ class Encoding:
         for k in range(n):
             for v in range(n):
                 C.append([p[(k, v, 0)]] if v == k else [-p[(k, v, 0)]])
-        # goal
-        for v in range(n):
-            C.append([p[(self.target[v], v, T)]])
+        # goal (omitted when target is None: the caller adds its own, e.g.
+        # pts.lb1.RegionSolver chooses it per call through assumptions)
+        if self.target is not None:
+            for v in range(n):
+                C.append([p[(self.target[v], v, T)]])
         # match: at most one incident edge per vertex per round
         for v in range(n):
             for t in range(T):
