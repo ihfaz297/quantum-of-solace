@@ -206,7 +206,23 @@ def single_edge_bound(r, e, pi, c):
         omega[(a, b)] = 1
     else:
         omega[(b, a)] = -1
-    bnd, D, maxQ, g = winding_bound(r, e, omega, pi)
+    # g_omega for a single-edge omega is the shortest cycle through that edge:
+    # 1 + the a-b distance avoiding it.  (winding.bound's default DFS over
+    # simple cycles stalls on regions with three rows of faces.)
+    adj = defaultdict(list)
+    for u, w in e:
+        if {u, w} != {a, b}:
+            adj[u].append(w)
+            adj[w].append(u)
+    dist = {a: 0}
+    queue = [a]
+    for u in queue:
+        for w in adj[u]:
+            if w not in dist:
+                dist[w] = dist[u] + 1
+                queue.append(w)
+    g_omega = dist[b] + 1 if b in dist else float("inf")
+    bnd, D, maxQ, g = winding_bound(r, e, omega, pi, g_omega=g_omega)
     return bnd
 
 

@@ -20,6 +20,12 @@ on:
 permissions:
   contents: read
 
+# a new push supersedes the running batch (its shards have already uploaded
+# whatever they finished, and the new jobs resume from those artifacts)
+concurrency:
+  group: lb1-batch
+  cancel-in-progress: true
+
 jobs:
   lb1:
     strategy:
