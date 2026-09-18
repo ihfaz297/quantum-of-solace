@@ -367,7 +367,8 @@ def enumerate_patch(W, Ht, T=11, verbose=True, cross_check=True, max_region=None
             for line in f:
                 if line.strip():
                     rec = json.loads(line)
-                    done[tuple(rec["faces"])] = rec
+                    if rec.get("T", T) == T:        # a log may hold rows for another T
+                        done[tuple(rec["faces"])] = rec
 
     rows = []
     all_ok = True
