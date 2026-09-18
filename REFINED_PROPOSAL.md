@@ -57,9 +57,17 @@ the original proposal:
   every number in this document — including a SAT encoder that certifies the
   face rotation a second way and settles the two candidate witnesses against
   `σ = 11` in about a second each: both cost exactly 11. A locality lemma then
-  cuts the 345,564 permutations with `LB = 1` on the `2 × 2` patch to 34 SAT
-  calls, all satisfiable at 11: **`σ = 11` on the whole `LB = 1` slice of that
-  patch** (Corollary B5).
+  makes the whole `LB = 1` slice of a patch enumerable — 345,564 permutations
+  of the `2 × 2` patch become 34 SAT calls — and every two-row patch up to
+  `5 × 2` (97,069 instances) is satisfiable at 11 throughout (Corollary B5).
+- **The conjecture `σ = 11` is REFUTED.** On the `3 × 3` patch the same
+  enumeration found a 40-cycle whose rotation by one step — every token moves
+  distance 1 — has no 11-round schedule on the whole 68-vertex patch (two
+  independent SAT solvers, a DRAT proof) and a 12-round one (replayed):
+  **`σ(heavy-hex) ≥ 12`** (Corollary B6). The winding bound is provably capped
+  at 11 on planar patches, so a different obstruction is at work, and it needs
+  three rows of faces. Whether the stretch keeps growing with the patch is
+  now the open question of RQ1.
 
 The original headline — a constant-factor approximation for heavy-hex — was
 for a period believed proved. Its proof rested on a grid guarantee attributed
@@ -69,8 +77,8 @@ habit that came out of it — every claim labelled, every "verified" backed by
 runnable code, every load-bearing citation read — is the method of this thesis
 (section 13).
 
-What remains is sharper than the original questions: is 11 tight? Is the
-reduction tight? And the one question the thesis will *not* claim — a constant
+What remains is sharper than the original questions: 11 is not tight — is
+12, and does the stretch grow with the patch? Is the reduction tight? And the one question the thesis will *not* claim — a constant
 bound on the stretch factor of heavy-hex — is downstream of a problem BGS leave
 open for grids, and this document says so rather than aiming at it.
 
@@ -477,36 +485,70 @@ per edge per round, one per token-position per round; ~15,000 variables and
 ~300,000 clauses at `n = 35`) solved by CaDiCaL; it agrees with the exact BFS
 solver on all twelve small instances of the suite.
 
-**Corollary B5 (the `LB = 1` slice of the `2 × 2` patch) — VERIFIED by SAT,
-every schedule replayed (suite: "LB = 1 slice"; `pts/lb1.py`); the reduction
-behind it PROVED.** Every permutation of `X(5,2)`, or of its 2-core, with
-`LB = 1` costs at most 11 rounds, and exactly 11 if it moves any token around
-a cycle. So `σ = 11` on the `LB = 1` slice of the `2 × 2` patch. Three facts
-make the slice enumerable: (i) a permutation has `LB = 1` iff its cycles are
-vertex-disjoint graph cycles, each traversed one way, and edges (2-cycles);
-(ii) `OPT(π) = OPT(π⁻¹)` — reverse the schedule — so a lone cycle's
-orientation is irrelevant; (iii) *locality*: if `C` is a cycle of a plane
-graph and `R` is `C` together with the vertices inside it, every neighbour of
-an inside vertex lies in `R`, so a schedule for "rotate `C`, composed with any
-`LB = 1` permutation of the inside" that uses only edges of `G[R]` absorbs any
-matching of edges outside `R` into its first round at no cost, and outermost
-cycles with disjoint regions run in parallel. Hence one SAT call per
-(cycle, `LB = 1` permutation of its interior) on the induced subgraph `G[R]`
-decides the slice. On the `2 × 2` patch: 14 simple cycles (the 4 faces, 5
-pairs of fused faces, the 2 triples around a branch vertex, 3 others),
-interiors of 0–7 vertices containing no cycle, 34 instances in all, every one
-`SAT` at `T = 11` (22 s total) and every one with winding bound 11. A region
-instance found `UNSAT` would be re-solved on the whole patch; none was. The
-pendant flag vertices of the full rectangle, and the pendants of real devices,
-lie outside every region, so the statement holds for them as well.
+**Corollary B5 (the `LB = 1` slice of two-row patches is exactly 11) —
+VERIFIED by SAT, every schedule replayed (`2 × 2` in the suite: "LB = 1
+slice"; the others by `pts/lb1.py`, logs in `results/lb1_*.jsonl`); the
+reduction behind it PROVED.** Every permutation with `LB = 1` of the `2 × 2`,
+`3 × 2`, `4 × 2` and `5 × 2` patches (2-cores, and the full rectangles) costs
+at most 11 rounds, and exactly 11 if it moves any token around a cycle.
 
-**Limitation (ceiling) — PROVED.** On a planar graph the bounded faces generate
-the cycle space, so an `ω` vanishing on every face is a coboundary and forces
-`D = 0`; hence `D ≠ 0` requires `ω(F) ≠ 0` for some face `F`, and `g_ω ≤ |F|`.
-On heavy-hex every face is a 12-cycle (face count equals cyclomatic number,
-VERIFIED), so Theorem B never exceeds 11 there. **It cannot decide whether
-`σ(heavy-hex) = 11`.** The `3 × 3` grid shows an enclosing cycle *can* beat
-`girth − 1`.
+| patch | `n` | simple cycles | instances | all `SAT` at 11 in |
+|---|---|---|---|---|
+| `2 × 2` | 35 | 14 | 34 | 5 s |
+| `3 × 2` | 49 | 46 | 464 | 70 s |
+| `4 × 2` | 63 | 133 | 6,687 | 10 min |
+| `5 × 2` | 77 | 364 | 97,069 | 84 min |
+
+Three facts make the slice enumerable: (i) a permutation has `LB = 1` iff its
+cycles are vertex-disjoint graph cycles, each traversed one way, and edges
+(2-cycles); (ii) `OPT(π) = OPT(π⁻¹)` — reverse the schedule — so a lone
+cycle's orientation is irrelevant; (iii) *locality*: if `C` is a cycle of a
+plane graph and `R` is `C` together with the vertices inside it, every
+neighbour of an inside vertex lies in `R`, so a schedule for "rotate `C`,
+composed with any `LB = 1` permutation of the inside" that uses only edges of
+`G[R]` absorbs any matching of edges outside `R` into its first round at no
+cost, and outermost cycles with disjoint regions run in parallel. Hence one
+SAT call per (cycle, `LB = 1` permutation of its interior) on the induced
+subgraph `G[R]` decides the slice; a region instance found `UNSAT` is
+re-solved on the whole patch. Nothing prunes the interior enumeration —
+dropping any single interior vertex makes the 44-cycle of the `4 × 2` patch
+`UNSAT` at 11 — so the instances of one cycle are solved by one incremental
+CaDiCaL instance with the interior permutation fixed by assumptions (tens of
+milliseconds per call after the first). The pendant flag vertices of the full
+rectangle, and the pendants of real devices, lie outside every region, so the
+statement holds for them as well. Naively the `2 × 2` slice alone has 345,564
+permutations.
+
+**Corollary B6 — `σ(heavy-hex) ≥ 12`; the winding bound is not tight.
+VERIFIED by SAT with two solvers, the 12-round schedule replayed (suite:
+"Witness"); the instance is `lb1.witness_7_3`.** On the `3 × 3` patch (2-core
+of `X(7,3)`, `n = 68`) let `C` be the 40-cycle bounding all nine faces except
+one corner face (face 6 in `pts` numbering; 21 vertices inside). Rotating `C`
+by one step has `LB = 1` and **no 11-round schedule**: `T = 11` is `UNSAT` on
+the whole patch by CaDiCaL (61 s, 667k conflicts, DRAT proof emitted) and by
+glucose4 (87 s), and on the 61-vertex region by both (92 s and 87 s); `T = 12`
+is `SAT` (schedule found, replayed, archived in `results/`). So `OPT = 12` at
+`LB = 1`, and `σ(heavy-hex) ≥ 12`. The same holds for the full `3 × 3`
+boundary (44-cycle, `UNSAT` at 11 in 141 s, `SAT` at 12) and for the notch
+at the opposite corner (all faces but face 0, `UNSAT` at 11 in 116 s); the
+notches at the other two corners are 44-cycles and rotate in 11. A 36-cycle
+of the same patch (faces 1–5, 7, 8) has 64 of its 2,704 interior systems
+above 11 on the whole patch. The `3 × 4` (`n = 87`) and `4 × 4` (`n = 111`)
+notched boundaries are `UNSAT` at 11 (103 s, 86 s) and `SAT` at 12: `OPT = 12`
+there as well, so no growth beyond 12 at these sizes. Every two-row patch is exactly 11 on its whole `LB = 1` slice
+(Corollary B5), so this is a height phenomenon: three rows of faces are
+needed. The enumeration of the `3 × 3` slice at `T = 12` is in progress
+(`results/lb1_7_3_T12.jsonl`).
+
+**Limitation (ceiling) — PROVED, and now known to bite.** On a planar graph
+the bounded faces generate the cycle space, so an `ω` vanishing on every face
+is a coboundary and forces `D = 0`; hence `D ≠ 0` requires `ω(F) ≠ 0` for some
+face `F`, and `g_ω ≤ |F|`. On heavy-hex every face is a 12-cycle (face count
+equals cyclomatic number, VERIFIED), so Theorem B never exceeds 11 there —
+and Corollary B6 exhibits `OPT = 12`. Whatever forces the twelfth round is
+not a winding obstruction, and the `3 × 3` grid already showed an enclosing
+cycle *can* beat `girth − 1` in the other direction. Finding the obstruction
+is now the theory half of RQ1.
 
 ### 4.4 Status ledger
 
@@ -524,9 +566,10 @@ VERIFIED), so Theorem B never exceeds 11 there. **It cannot decide whether
 | girth law | PROVED; VERIFIED 15 hosts | suite "Winding probe" |
 | `σ(heavy-hex) ≥ 11` | PROVED | suite "Winding theorem" |
 | the 20- and 24-cycle witnesses cost exactly 11 | VERIFIED by SAT, replayed | suite "SAT certificates" |
-| `σ = 11` on the `LB = 1` slice of the `2 × 2` patch | VERIFIED by SAT, 34 calls, all replayed; the reduction to 34 PROVED | suite "LB = 1 slice"; `lb1.py` |
-| `σ = 11` on the `LB = 1` slice of the `3 × 2` patch | VERIFIED by `pts.lb1`, 464 calls, all replayed; log in `results/` | `lb1.py`; not in suite |
-| `σ(heavy-hex) = 11` | OPEN (RQ1); CONJECTURED on the evidence of the `LB = 1` slices; Theorem B cannot decide it | — |
+| `σ = 11` on the `LB = 1` slices of the `2 × 2`, `3 × 2`, `4 × 2`, `5 × 2` patches | VERIFIED by SAT (34 / 464 / 6,687 / 97,069 instances, all replayed); the reduction PROVED | suite "LB = 1 slice" (`2 × 2`); `results/lb1_*.jsonl` |
+| `σ(heavy-hex) ≥ 12` | VERIFIED by SAT: `UNSAT` at 11 by CaDiCaL (DRAT) and glucose4, `SAT` at 12 replayed | suite "Witness"; `results/witness_7_3_*` |
+| `σ(heavy-hex) = 11` | **REFUTED** (Corollary B6) | — |
+| `σ(heavy-hex) = 12`; bounded at all | OPEN (RQ1); `3 × 3` slice at `T = 12` running; the `3 × 4` and `4 × 4` notched boundaries cost exactly 12 | `results/lb1_7_3_T12.jsonl`, `results/rot_*` |
 | `σ(square grids) ≥ 4` | PROVED by computation | suite "Section 5 table" |
 | `OPT_Γ(σ_r) = O(OPT_X(π))` | OPEN (RQ2b) | — |
 | patch formula = 2-core count | VERIFIED 6 shapes | suite "Patch model" |
@@ -538,29 +581,27 @@ VERIFIED), so Theorem B never exceeds 11 there. **It cannot decide whether
 
 ## 5. Research questions
 
-**RQ1 (lower bound).** `σ(heavy-hex) ≥ 11` is PROVED. Is it tight? Theorem B
-cannot say. The two candidate witnesses named by the audit — the 20-cycle
-bounding two fused faces and the 24-cycle around a branch vertex, the heavy-hex
-analogue of the `3 × 3` grid's centre — have been run on genuine family members
-(the 2-cores of the `2 × 1` and `2 × 2` patches, since routing number is not
-monotone under subgraphs) and **both cost exactly 11** (Corollary B4). So the
-obvious enclosing cycles do not refute `σ = 11`, and neither does the whole
-`LB = 1` slice of the `2 × 2` patch: the locality reduction of Corollary B5
-makes that slice 34 SAT calls, and all 34 are satisfiable at 11.
-The same enumeration on the `3 × 2` patch (`n = 49`, 46 simple
-cycles, interiors up to 13 vertices, 464 instances, 23 min on a laptop) is
-likewise all `SAT` at 11 with winding bound 11 throughout — VERIFIED by
-`pts/lb1.py`, log archived in `results/lb1_7_2.jsonl`, not in the suite — so
-`σ = 11` on the `LB = 1` slice of the `3 × 2` patch as well. The `4 × 2`
-(`n = 63`, 133 cycles) and `3 × 3` (`n = 68`, 288 cycles) patches are running
-at the time of writing, all `SAT` so far. What remains of RQ1 is, in order: the `LB = 1` slices of larger
-patches until the cycle count makes them infeasible (the count grows with the
-number of face subsets, not with `n`); the `LB = 2` slice, which is not
-enumerable — an `LB = 2` instance with `OPT ≥ 23` would refute `σ = 11`, and
-a time-capped SAT probe of chosen instances is the tool; and a proof of the
-upper bound 11 for all `LB = 1` permutations of every patch, for which the
-replayed schedules are the data. The thesis says which slice each result
-covers.
+**RQ1 (lower bound).** `σ(heavy-hex) ≥ 11` is PROVED, and **11 is not
+tight**: `σ(heavy-hex) ≥ 12` is VERIFIED (Corollary B6). The road there: the
+two candidate witnesses named by the audit — the 20-cycle bounding two fused
+faces and the 24-cycle around a branch vertex — both cost exactly 11
+(Corollary B4); the whole `LB = 1` slices of the `2 × 2`, `3 × 2`, `4 × 2` and
+`5 × 2` patches cost exactly 11 (Corollary B5, 104,254 instances in all); and
+on the first patch with three rows of faces the enumeration found, within
+its first 160 cycles, a 40-cycle whose rotation needs 12 rounds, certified
+`UNSAT` at 11 by two solvers and `SAT` at 12 by a replayed schedule. What
+RQ1 asks now is, in order: (a) *is 12 the maximum on the `3 × 3` slice?* —
+the enumeration at `T = 12` is running; (b) *does the stretch grow with the
+patch?* — the `3 × 4` and `4 × 4` notched boundaries cost exactly 12, so
+not at those sizes along that family; the long cycles of `4 × 4`, `5 × 3` and
+`5 × 5` at `T = 12` and `13` are the next probes (the encoding needs a linear
+at-most-one for `n > 100`); a growing sequence would mean the stretch factor of `d_max` on
+heavy-hex is unbounded, i.e. no bound of the form `c · LB` exists at all and
+the additive `c₂ · h` term of Theorem A is genuinely necessary; (c) *what is
+the obstruction?* — a lower-bound argument that sees the twelfth round,
+which the winding bound provably cannot (the ceiling). The `LB = 2` slice is
+not enumerable and is probed by time-capped SAT on chosen instances. The
+thesis says which slice each result covers.
 
 **RQ2 (reduction).** (a) *Does heavy-hex PTS reduce to grid PTS preserving the
 per-instance geodesic bound?* Yes — Theorem A. (b) *Is the reduction tight* —
@@ -602,7 +643,8 @@ on the theory arm, and each arm has dated milestones.
   the original plan budgeted a week for is: about one second at `n = 35`,
   `T = 11`.
 - *Done (`pts/lb1.py`):* the `LB = 1` enumerator with the locality reduction
-  of Corollary B5, run on the `2 × 2` patch (34 calls, 22 s) and larger.
+  of Corollary B5 and one incremental solver per cycle, run on every two-row
+  patch up to `5 × 2` and on `3 × 3`, where it found the `OPT = 12` witness.
   *Weeks 1–3:* `LB = 2` probes with a time cap.
 - *Weeks 2–5:* BGS Algorithm 6 as a parallel router with its short-side
   orientation and an `LB`-relative test (`≤ 2·d_max + 2h`) in the suite.
@@ -629,9 +671,12 @@ on the theory arm, and each arm has dated milestones.
 - A theory note — reduction, winding bound, corollaries, ceiling — ready for
   the supervisor by week 14.
 
-**Phase 3 — RQ1 (weeks 3–16).** The `LB = 1` enumeration on the `2 × 2`
-patch is done (Corollary B5); larger patches follow while the cycle count
-allows, each run archived with its replayed schedules. Grids: `4 × 4` and `3 × 5` at
+**Phase 3 — RQ1 (weeks 3–16).** The `LB = 1` enumerations are done through
+`5 × 2` and the `3 × 3` witness is certified (Corollaries B5, B6). Next: the
+`3 × 3` slice at `T = 12` (is 12 the maximum there?); the long cycles of
+`4 × 3`, `4 × 4`, `5 × 3` at `T = 12` and `13` (does the stretch grow with
+height and width?); then the theory — a lower-bound argument that sees the
+twelfth round, which the winding bound provably cannot. Grids: `4 × 4` and `3 × 5` at
 `LB ≤ 1` by SAT, to see whether grid stretch grows at small sizes — cheap and
 informative for RQ2(c). `LB = 2` probes with a time cap. Then a proof attempt
 in whichever direction the computation points: a general upper bound of 11 on
@@ -688,11 +733,12 @@ arm:
 - **G1 (empirical arm).** Milestones M1 and M2 are green in the suite: BGS
   Algorithm 6 passes its `LB`-relative test, and the router replays on the
   Heron-156 2-core with pendants.
-- **G2 (theory arm).** *Met already for the `2 × 2` patch* (Corollary B5: a
-  replayed schedule for every cycle system). The gate now asks for the same
-  on the `3 × 3` patch — a certificate for every cycle system (a replayed
-  schedule, or an `UNSAT` verdict at `T = 11` with a DRAT proof) — or its
-  documented infeasibility with the count and the runtime figures.
+- **G2 (theory arm).** *Met:* the `2 × 2` through `5 × 2` slices are fully
+  certified and the `3 × 3` patch produced a certified witness above 11
+  (Corollaries B5, B6). The gate now asks for the `3 × 3` slice at `T = 12`
+  — a certificate for every cycle system (a replayed schedule, or an `UNSAT`
+  verdict at 12 with a DRAT proof) — or its documented infeasibility with the
+  count and the runtime figures.
 
 Both hold → Phase 4a. G1 fails → all effort to G1 until it holds; Phase 4a is
 dropped; Phase 5 proceeds. G1 holds, G2 fails → Phase 4b, with SAT left
@@ -729,8 +775,8 @@ each is a test that passes or does not.
 |---|---|---|
 | **Threshold** | Deliverables 1 and 2 minus the BGS algorithms; the theory note with Theorem A and `σ ≥ 11` as PROVED; `rt(X) = Θ(diam)` reconciled with Yuan–Zhang; documented negative results. | **Secured**: the router, exact solver, winding bound and check suite exist and pass; the reconciliation paragraph is owed. |
 | **Threshold, second half** | BGS Algorithms 2–4 and 6 implemented and replayed; the comparative study (Deliverable 4). | **Not started.** Reachable by construction — it depends only on implementing published algorithms and running experiments — but not secured, and the original proposal's front-loading of it is kept for that reason. |
-| **Target** | The reduction and Corollary A2 written for device 2-cores with pendants; the `LB = 1` slice of the `2 × 2` patch decided with certificates; an explicit constant for Lemma 3; the novelty sweep closed one way or the other. | Theorems proved for brick rectangles; the two named RQ1 witnesses decided (both 11) and the `LB = 1` slice of the `2 × 2` patch decided (`σ = 11` there); extensions and constant outstanding. |
-| **Stretch** | `σ(heavy-hex) = 11` for the `LB = 1` slice of *every* patch (a proof, not an enumeration), or a witness above 11 at `LB ≥ 2`; the coloured/incomplete corollaries; the `OPT`-pullback on a class; the general bounded-fiber quotient theorem. | Not started; gated. |
+| **Target** | The reduction and Corollary A2 written for device 2-cores with pendants; the `LB = 1` slice of the `2 × 2` patch decided with certificates; an explicit constant for Lemma 3; the novelty sweep closed one way or the other. | Theorems proved for brick rectangles; the `LB = 1` slices of `2 × 2` through `5 × 2` decided (`σ = 11` there) and `σ ≥ 12` certified on `3 × 3`; extensions and constant outstanding. |
+| **Stretch** | the exact stretch of the `3 × 3` `LB = 1` slice; a lower-bound argument that explains `OPT = 12`; whether the stretch grows with the patch; the coloured/incomplete corollaries; the `OPT`-pullback on a class; the general bounded-fiber quotient theorem. | Not started; gated. |
 | **Out of scope, stated** | `σ(heavy-hex) = O(1)`; NP-hardness embedded into heavy-hex; constant-competitiveness with Yuan–Zhang. | — |
 
 ---
@@ -740,7 +786,7 @@ each is a test that passes or does not.
 | risk | assessment | mitigation |
 |---|---|---|
 | Hard theory (RQ2b, reverse reduction) does not close | likely; may be equivalent to an open problem | gated; Target does not depend on it; eight-week box |
-| The `LB = 1` enumeration is too large on larger patches | real: the locality reduction leaves one call per (cycle, `LB = 1` permutation of its interior), and the cycle count grows with the face subsets — 14 on `2 × 2`, 46 on `3 × 2`, 133 on `4 × 2`, 288 on `3 × 3` — and the interior permutations with it (464 instances on `3 × 2`) | run patches in increasing size and archive each; symmetry reduction (the patch's reflections) if needed; cap at the gate; whatever the last completed patch is, RQ1 is stated for its slice and CONJECTURED beyond |
+| The `LB = 1` enumeration is too large on larger patches | real: the locality reduction leaves one call per (cycle, `LB = 1` permutation of its interior), and the cycle count grows with the face subsets — 14 on `2 × 2`, 46 on `3 × 2`, 133 on `4 × 2`, 288 on `3 × 3`, 364 on `5 × 2` — and the interior permutations with it (97,069 instances on `5 × 2`, 84 min with the incremental solver; `UNSAT` verdicts cost a minute each and are the interesting ones) | run patches in increasing size and archive each (resumable logs, shards on GitHub Actions); cap at the gate; whatever the last completed patch is, RQ1 is stated for its slice and CONJECTURED beyond |
 | Pendant extension is not routine | real; it changes fiber size, phase count and constants | three weeks budgeted; fallback is the theorems for brick rectangles with pendants handled by a trivial pre/post phase, stated as such |
 | **Adjacent literature restates a result under different vocabulary** | *it happened once*: Yuan–Zhang say "brick wall", never "hex", and are uncited by BGS | monitor by *structure*: "routing number", "routing via matchings", "permutation routing", "brick wall" + routing; citations to *both* arXiv:2411.18581 and arXiv:2402.02403 in OpenAlex, Semantic Scholar and OpenCitations (they disagree by 5× on the same paper) plus one non-arXiv index; confirm Theorem 9 is in Yuan–Zhang v1 for the priority date |
 | Scooped on RQ1/RQ2 exactly | moderate: BGS has 0–1 citations after 22 months and no follow-up, but Yuan–Zhang has 15 citers and 2026 routing-number papers use quotient machinery | theory note to the supervisor by week 14; preprint if the supervisor agrees (section 11) |
@@ -795,9 +841,13 @@ bounded model checking** (`pts/sat.py`, CaDiCaL via `python-sat`), and the
 feasibility question is answered: `n = 35`, `T = 11` takes about a second on a
 laptop, with ~15,000 variables and ~300,000 clauses. What scales is the
 *number* of instances in the `LB = 1` enumeration, not any single one, and that
-is a CPU-hours question, not a hardware one — and the locality reduction of
-Corollary B5 takes the `2 × 2` patch from 345,564 permutations to 34 calls
-and 22 s. Reproducibility comes from
+is a CPU-hours question, not a hardware one — the locality reduction of
+Corollary B5 takes the `2 × 2` patch from 345,564 permutations to 34 calls,
+and one incremental CaDiCaL instance per cycle takes the `5 × 2` patch's
+97,069 instances to 84 min on a laptop. `UNSAT` verdicts are the expensive
+calls (about a minute each at `n = 68`), and they are the results. Long runs
+are resumable from a per-cycle log and can be sharded across GitHub Actions
+jobs, which matters where the mains supply is unreliable. Reproducibility comes from
 determinism — CaDiCaL is deterministic for a fixed input, every `SAT` answer is
 replayed independently of the solver, and `UNSAT` answers can carry a DRAT
 proof — and from pinned versions and explicit seeds everywhere else. The blank

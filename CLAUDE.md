@@ -120,6 +120,16 @@ sequences them and is what the documents' **VERIFIED** labels refer to.
   6, not 7 (girth drops to 6). The law is `OPT >= girth - 1`, and the winding
   probe must include `m = 8`.
 - `girth()` returns `inf` for forests (`A = 0` or `B = 0` patches are trees).
+- **Cycle orientation is canonical.** `sat.union_boundary` starts at the
+  smallest vertex and steps to its smaller neighbour. Vertex names contain
+  strings, so anything that starts from "the first element of a set" flips
+  direction between processes under hash randomisation; `OPT` does not care
+  (inverse permutation), an archived schedule does.
+- **`sigma(heavy-hex) >= 12` is a result, not a bug.** `lb1.witness_7_3` is
+  the 40-cycle of the 3 x 3 patch with `LB = 1` and `OPT = 12`; a long-silent
+  enumeration on a three-row patch is usually CaDiCaL proving an `UNSAT` at
+  11 (a minute each), which is exactly what the row's `witnesses` field
+  records. Two-row patches never do this.
 - **The `LB = 1` enumeration must include nested cycles.** A cycle system
   splits into outermost cycles; each region instance ranges over every
   `LB = 1` permutation of the interior — cycles lying inside (both

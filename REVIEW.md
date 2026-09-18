@@ -506,11 +506,25 @@ vertices inside `C`" that stays inside the closed region of `C` absorbs any
 matching outside the region for free, since no inside vertex has a neighbour
 outside. So the slice is one SAT call per (cycle, `LB = 1` permutation of its
 interior) on the induced subgraph of the region: 14 cycles, 34 calls, all
-`SAT` at `T = 11` in 22 s, every schedule replayed, every instance with
-winding bound 11. **`sigma = 11` on the `LB = 1` slice of the `2x2` patch.**
-The `3x2` patch (`n = 49`) is done too: 46 cycles, 464 instances, all `SAT`
-at 11, 23 min. The `4x2` and `3x3` patches were running at the time of
-writing.
+`SAT` at `T = 11` in 5 s, every schedule replayed, every instance with
+winding bound 11. **`sigma = 11` on the `LB = 1` slice of the `2x2` patch**,
+and likewise of `3x2` (464 instances), `4x2` (6,687) and `5x2` (97,069, 84
+min with one incremental CaDiCaL instance per cycle).
+
+**And then the `3x3` patch refuted `sigma = 11`.** Rotating the 40-cycle that
+bounds all nine faces but one corner (2-core of `X(7,3)`, `n = 68`, `LB = 1`)
+is `UNSAT` at `T = 11` on the whole patch — CaDiCaL in 61 s with a DRAT
+proof, glucose4 in 87 s, and both again on the 61-vertex region — and `SAT`
+at `T = 12`, schedule replayed and archived. `OPT = 12` at `LB = 1`:
+**`sigma(heavy-hex) >= 12`**, one above the winding bound's planar ceiling.
+The full `3x3` boundary and the opposite notch behave the same; the other two
+corners rotate in 11; every two-row patch is 11 throughout. So the extra
+round needs three rows of faces, and the obstruction is not a winding
+argument. The notched boundaries of `3x4` (`n = 87`) and `4x4` (`n = 111`) cost
+exactly 12 as well (`UNSAT` at 11, `SAT` at 12), so no growth beyond 12 at
+those sizes; the `3x3` slice at `T = 12` is the running experiment. Suite section
+"Witness" replays the 12-round schedule and, in the full run, re-derives the
+`UNSAT` at 11.
 
 Two things that are cheaper than they look: (a) a permutation has `LB = 1`
 iff it rotates a set of vertex-disjoint cycles and edges, so "max `OPT` over
