@@ -537,8 +537,11 @@ above 11 on the whole patch. The `3 × 4` (`n = 87`) and `4 × 4` (`n = 111`)
 notched boundaries are `UNSAT` at 11 (103 s, 86 s) and `SAT` at 12: `OPT = 12`
 there as well, so no growth beyond 12 at these sizes. Every two-row patch is exactly 11 on its whole `LB = 1` slice
 (Corollary B5), so this is a height phenomenon: three rows of faces are
-needed. The enumeration of the `3 × 3` slice at `T = 12` is in progress
-(`results/lb1_7_3_T12.jsonl`).
+needed. **And 12 is the maximum there:** the whole `LB = 1` slice of the
+`3 × 3` patch at `T = 12` — 288 cycles, 85,062 instances, interiors up to 24
+vertices, four of them containing nested cycles — is `SAT` throughout (67
+min on a laptop, every schedule replayed; `results/lb1_7_3_T12.jsonl`). So
+`σ = 12` on the `LB = 1` slice of the `3 × 3` patch, VERIFIED by `pts/lb1.py`.
 
 **Limitation (ceiling) — PROVED, and now known to bite.** On a planar graph
 the bounded faces generate the cycle space, so an `ω` vanishing on every face
@@ -569,7 +572,8 @@ is now the theory half of RQ1.
 | `σ = 11` on the `LB = 1` slices of the `2 × 2`, `3 × 2`, `4 × 2`, `5 × 2` patches | VERIFIED by SAT (34 / 464 / 6,687 / 97,069 instances, all replayed); the reduction PROVED | suite "LB = 1 slice" (`2 × 2`); `results/lb1_*.jsonl` |
 | `σ(heavy-hex) ≥ 12` | VERIFIED by SAT: `UNSAT` at 11 by CaDiCaL (DRAT) and glucose4, `SAT` at 12 replayed | suite "Witness"; `results/witness_7_3_*` |
 | `σ(heavy-hex) = 11` | **REFUTED** (Corollary B6) | — |
-| `σ(heavy-hex) = 12`; bounded at all | OPEN (RQ1); `3 × 3` slice at `T = 12` running; the `3 × 4` and `4 × 4` notched boundaries cost exactly 12 | `results/lb1_7_3_T12.jsonl`, `results/rot_*` |
+| `σ = 12` on the `LB = 1` slice of the `3 × 3` patch | VERIFIED by `pts.lb1`: 85,062 instances all `SAT` at 12, plus the witness at 11 | `results/lb1_7_3_T12.jsonl`; suite "Witness" |
+| `σ(heavy-hex) = 12`; bounded at all | OPEN (RQ1); the `3 × 4` and `4 × 4` notched boundaries cost exactly 12 | `results/rot_*` |
 | `σ(square grids) ≥ 4` | PROVED by computation | suite "Section 5 table" |
 | `OPT_Γ(σ_r) = O(OPT_X(π))` | OPEN (RQ2b) | — |
 | patch formula = 2-core count | VERIFIED 6 shapes | suite "Patch model" |
@@ -591,7 +595,7 @@ on the first patch with three rows of faces the enumeration found, within
 its first 160 cycles, a 40-cycle whose rotation needs 12 rounds, certified
 `UNSAT` at 11 by two solvers and `SAT` at 12 by a replayed schedule. What
 RQ1 asks now is, in order: (a) *is 12 the maximum on the `3 × 3` slice?* —
-the enumeration at `T = 12` is running; (b) *does the stretch grow with the
+**yes**: all 85,062 instances are `SAT` at 12 (Corollary B6); (b) *does the stretch grow with the
 patch?* — the `3 × 4` and `4 × 4` notched boundaries cost exactly 12, so
 not at those sizes along that family; the long cycles of `4 × 4`, `5 × 3` and
 `5 × 5` at `T = 12` and `13` are the next probes (the encoding needs a linear
@@ -672,8 +676,8 @@ on the theory arm, and each arm has dated milestones.
   the supervisor by week 14.
 
 **Phase 3 — RQ1 (weeks 3–16).** The `LB = 1` enumerations are done through
-`5 × 2` and the `3 × 3` witness is certified (Corollaries B5, B6). Next: the
-`3 × 3` slice at `T = 12` (is 12 the maximum there?); the long cycles of
+`5 × 2` at 11 and on `3 × 3` at 12, the latter with certified witnesses at 11
+(Corollaries B5, B6). Next: the long cycles of
 `4 × 3`, `4 × 4`, `5 × 3` at `T = 12` and `13` (does the stretch grow with
 height and width?); then the theory — a lower-bound argument that sees the
 twelfth round, which the winding bound provably cannot. Grids: `4 × 4` and `3 × 5` at
@@ -734,11 +738,10 @@ arm:
   Algorithm 6 passes its `LB`-relative test, and the router replays on the
   Heron-156 2-core with pendants.
 - **G2 (theory arm).** *Met:* the `2 × 2` through `5 × 2` slices are fully
-  certified and the `3 × 3` patch produced a certified witness above 11
-  (Corollaries B5, B6). The gate now asks for the `3 × 3` slice at `T = 12`
-  — a certificate for every cycle system (a replayed schedule, or an `UNSAT`
-  verdict at 12 with a DRAT proof) — or its documented infeasibility with the
-  count and the runtime figures.
+  certified at 11, and the `3 × 3` slice is fully certified at 12 with a
+  certified witness at 11 (Corollaries B5, B6). The gate is re-pointed at the
+  next patch whose slice is feasible (`4 × 3`, counted first) at `T = 12`, or
+  its documented infeasibility with the count and the runtime figures.
 
 Both hold → Phase 4a. G1 fails → all effort to G1 until it holds; Phase 4a is
 dropped; Phase 5 proceeds. G1 holds, G2 fails → Phase 4b, with SAT left
@@ -775,7 +778,7 @@ each is a test that passes or does not.
 |---|---|---|
 | **Threshold** | Deliverables 1 and 2 minus the BGS algorithms; the theory note with Theorem A and `σ ≥ 11` as PROVED; `rt(X) = Θ(diam)` reconciled with Yuan–Zhang; documented negative results. | **Secured**: the router, exact solver, winding bound and check suite exist and pass; the reconciliation paragraph is owed. |
 | **Threshold, second half** | BGS Algorithms 2–4 and 6 implemented and replayed; the comparative study (Deliverable 4). | **Not started.** Reachable by construction — it depends only on implementing published algorithms and running experiments — but not secured, and the original proposal's front-loading of it is kept for that reason. |
-| **Target** | The reduction and Corollary A2 written for device 2-cores with pendants; the `LB = 1` slice of the `2 × 2` patch decided with certificates; an explicit constant for Lemma 3; the novelty sweep closed one way or the other. | Theorems proved for brick rectangles; the `LB = 1` slices of `2 × 2` through `5 × 2` decided (`σ = 11` there) and `σ ≥ 12` certified on `3 × 3`; extensions and constant outstanding. |
+| **Target** | The reduction and Corollary A2 written for device 2-cores with pendants; the `LB = 1` slice of the `2 × 2` patch decided with certificates; an explicit constant for Lemma 3; the novelty sweep closed one way or the other. | Theorems proved for brick rectangles; the `LB = 1` slices of `2 × 2` through `5 × 2` decided (`σ = 11` there) and of `3 × 3` decided (`σ = 12` there); extensions and constant outstanding. |
 | **Stretch** | the exact stretch of the `3 × 3` `LB = 1` slice; a lower-bound argument that explains `OPT = 12`; whether the stretch grows with the patch; the coloured/incomplete corollaries; the `OPT`-pullback on a class; the general bounded-fiber quotient theorem. | Not started; gated. |
 | **Out of scope, stated** | `σ(heavy-hex) = O(1)`; NP-hardness embedded into heavy-hex; constant-competitiveness with Yuan–Zhang. | — |
 
