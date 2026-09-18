@@ -221,6 +221,34 @@ def main(fast=False):
             print("  sigma = 11 on the LB = 1 slice of the 2 x 2 patch.")
             print("  -> VERIFIED" if lo else "  -> FAILED")
 
+    if satmod is not None:
+        banner("Witness  --  an LB = 1 permutation with OPT = 12 (pts/lb1.py)")
+        import json
+        w = lb1.witness_7_3()
+        lb = satmod.lower_bound(w["n"], w["edges"], w["target"])
+        sched = json.load(open("results/witness_7_3_40cycle_T12_schedule.json"))
+        ok12 = (len(sched) == 12 and
+                satmod.replay(w["n"], [tuple(map(tuple, m)) for m in sched], w["target"]))
+        print(f"  2-core of X(7,3), n = {w['n']}: rotate the {len(w['cycle'])}-cycle bounding "
+              f"faces {w['faces']} (all but one corner), {len(w['interior'])} interior vertices")
+        print(f"  {'ok ' if lb == 1 else 'FAIL'} LB = {lb}")
+        print(f"  {'ok ' if ok12 else 'FAIL'} the archived 12-round schedule replays to the target "
+              f"(results/witness_7_3_40cycle_T12_schedule.json)  -> OPT <= 12")
+        wt2 = lb == 1 and ok12
+        if fast:
+            print("  (--fast: the T = 11 UNSAT certificate is re-derived only in the full run;")
+            print("   it takes CaDiCaL about a minute)")
+        else:
+            s11, _, secs, st = satmod.check(w["n"], w["edges"], w["target"], 11)
+            print(f"  {'ok ' if not s11 else 'FAIL'} T = 11 on the whole patch: "
+                  f"{'UNSAT' if not s11 else 'SAT'} in {secs:.0f}s  -> OPT >= 12")
+            wt2 &= not s11
+        ok &= wt2
+        print("  sigma(heavy-hex) >= 12: the winding bound (capped at 11 on planar")
+        print("  patches) is not tight.  Two-row patches are exactly 11 on their whole")
+        print("  LB = 1 slice (results/lb1_*.jsonl); three rows of faces are needed.")
+        print("  -> VERIFIED" + (" (partial)" if fast else "") if wt2 else "  -> FAILED")
+
     banner("Patch model  --  the proposal's formula counts the 2-core")
     tc = True
     for r in two_core_audit():
@@ -263,7 +291,8 @@ def main(fast=False):
     print("  Assumption (G) is NOT a theorem in BGS -- see REVIEW.md section 2.")
     print("  sigma(heavy-hex) >= 11 is PROVED by the winding bound (pts/winding.py).")
     print("  'Legs never help' was WRONG; OPT >= girth - 1 is the law, and proved.")
-    print("  sigma = 11 on the LB = 1 slice of the 2 x 2 patch is VERIFIED (SAT).")
+    print("  sigma = 11 on the LB = 1 slice of every two-row patch tried (SAT), and")
+    print("  sigma >= 12 on the 3 x 3 patch: an LB = 1 permutation with OPT = 12.")
     print(f"\n  overall: {'PASS' if ok else 'FAIL'}")
     return 0 if ok else 1
 

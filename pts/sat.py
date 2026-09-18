@@ -233,10 +233,17 @@ def union_boundary(g, faces):
         adj[a].append(b)
         adj[b].append(a)
     assert all(len(ws) == 2 for ws in adj.values()), "union boundary is not a cycle"
-    start = next(iter(adj))
+    # canonical start and direction (the vertex tuples contain strings, so set
+    # order varies between processes under hash randomisation; the rotation
+    # direction must not)
+    start = min(adj)
     cyc, prev, cur = [start], None, start
+    first = min(adj[start])
     while True:
-        nxt = adj[cur][0] if adj[cur][0] != prev else adj[cur][1]
+        if prev is None:
+            nxt = first
+        else:
+            nxt = adj[cur][0] if adj[cur][0] != prev else adj[cur][1]
         if nxt == start:
             break
         cyc.append(nxt)

@@ -394,6 +394,7 @@ def enumerate_patch(W, Ht, T=11, verbose=True, cross_check=True, max_region=None
         worst = 0.0
         n_sat = 0
         n_escaped = 0
+        witnesses = []                      # systems with no T-round schedule
 
         # the winding bound is the same for every instance of this cycle
         r, e, tgt, pi, c = region_instance(edges, cinfo["cycle"], interior, [])
@@ -401,7 +402,10 @@ def enumerate_patch(W, Ht, T=11, verbose=True, cross_check=True, max_region=None
 
         rs = RegionSolver(edges, cinfo["cycle"], interior, inner_cycles, T) \
             if incremental else None
-        for inner, M in systems:
+        for k_sys, (inner, M) in enumerate(systems):
+            if verbose and k_sys and k_sys % 1000 == 0:
+                print(f"        ... {k_sys}/{len(systems)} instances, "
+                      f"{len(witnesses)} above T so far", flush=True)
             if incremental:
                 keys = system_keys(rs.loc, inner, M)
                 tgt_local = rs.target_for(keys)
@@ -432,6 +436,11 @@ def enumerate_patch(W, Ht, T=11, verbose=True, cross_check=True, max_region=None
             worst = max(worst, secs2)
             if sat2:
                 n_escaped += 1
+            witnesses.append({"inner": [list(cyc) for cyc in inner],
+                              "M": [list(ed) for ed in M],
+                              "region_secs": round(secs, 1),
+                              "patch": "SAT" if sat2 else "UNSAT",
+                              "patch_secs": round(secs2, 1)})
             all_ok = False
         if rs is not None:
             rs.close()
@@ -443,7 +452,8 @@ def enumerate_patch(W, Ht, T=11, verbose=True, cross_check=True, max_region=None
                "escaped": n_escaped, "max_secs": worst,
                "calls": calls - calls_before,
                "secs": time.perf_counter() - t_cycle, "T": T,
-               "mode": "incremental" if incremental else "separate"}
+               "mode": "incremental" if incremental else "separate",
+               "witnesses": witnesses}
         rows.append(row)
         if log:
             with open(log, "a", encoding="utf-8") as f:
@@ -468,6 +478,23 @@ def enumerate_patch(W, Ht, T=11, verbose=True, cross_check=True, max_region=None
             print(f"  -> some LB = 1 permutation of X({W},{Ht}) costs > {T} on its "
                   f"region; see rows")
     return verdict
+
+
+def witness_7_3():
+    """The permutation of the 2-core of X(7,3) (the 3 x 3 patch, n = 68) with
+    LB = 1 and OPT = 12: rotate by one step the 40-cycle bounding all faces
+    but the corner face 6.  Returns a dict with n, edges, target (sat
+    convention), the cycle, its interior and the face tuple.  Found by the
+    LB = 1 enumeration on 2026-09-19; UNSAT at T = 11 on the whole patch by
+    CaDiCaL (61 s, DRAT proof) and glucose4 (87 s), and on its 61-vertex
+    region by both; SAT at T = 12 (schedule replayed)."""
+    g = HeavyHex(7, 3)
+    verts, idx, edges, cycles = face_union_cycles(g)
+    c = [c for c in cycles if tuple(c["faces"]) == (0, 1, 2, 3, 4, 5, 7, 8)][0]
+    n = len(verts)
+    return {"n": n, "edges": edges, "target": rotation_target(n, c["cycle"]),
+            "cycle": c["cycle"], "interior": c["interior"], "faces": c["faces"],
+            "vertices": verts}
 
 
 def _print_row(row, T, resumed=False):
