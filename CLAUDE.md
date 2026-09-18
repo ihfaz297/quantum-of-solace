@@ -29,8 +29,8 @@ python -m pts.winding            # the winding lower bound: stress test + heavy-
 python -m pts.sat                # SAT encoder: validation vs exact, face certificate, RQ1 n=21
 python -m pts.sat --big          # ... plus the n = 35 instance (~1 s)
 python -m pts.lb1                # the whole LB = 1 slice of the 2 x 2 patch: 34 SAT calls, ~6 s
-python -m pts.lb1 7 3 11         # same for X(7,3) (3 x 3 patch); args are W Ht T
-python -m pts.lb1 7 3 11 --log=results/lb1_7_3.jsonl --shard=2/6   # resumable; cycles with index % 6 == 2
+python -m pts.lb1 7 3 12         # same for X(7,3) (3 x 3 patch); args are W Ht T -- 3 x 3 needs T = 12
+python -m pts.lb1 7 3 12 --log=results/lb1_7_3_T12.jsonl --shard=2/6   # resumable; cycles with index % 6 == 2
 python -m pts.scaling            # diameter and lifting-constant scaling to n = 480
 python -m pts.check_lemma1       # or check_lemma2 / check_algorithm, individually
 ```
@@ -99,6 +99,25 @@ cycles with pendants / hubs / chords / escape paths, grids, `girth`, the 2-core
 audit, the Yuan-Zhang involution obstruction, the 12x10 mesh comparison).
 `check_*.py` are the assertion layers over all of the above; `check_all.py`
 sequences them and is what the documents' **VERIFIED** labels refer to.
+
+## Results and CI
+
+`results/` holds the archived computations the documents cite. `lb1_W_Ht.jsonl`
+(and `_T12`) are the enumeration logs, one JSON row per simple cycle with its
+instance count, verdicts, `witnesses` (interior systems UNSAT at T) and
+timings; `pts.lb1 ... --log=<file>` resumes from them, so re-running a
+finished patch costs nothing. `witness_7_3_40cycle.json` and
+`..._T12_schedule.json` are the sigma >= 12 instance and its 12-round
+schedule; **the suite section "Witness" reads the schedule file**, so do not
+move or regenerate it without re-running `check_all`. `rot_*.json` are single
+rotation probes with their schedules. `*.drat` proofs are gitignored (200 MB).
+
+Two GitHub Actions workflows: `checks.yml` runs the fast suite on every push
+and the full suite weekly; `lb1-batch.yml` runs sharded enumerations whenever
+that file itself is pushed, each shard resuming from its own artifact and,
+before that, from the committed log. Results go to artifacts, never to
+commits: the owner runs a watcher that shuts the machine down when
+origin/HEAD moves.
 
 ## Conventions that bite
 
