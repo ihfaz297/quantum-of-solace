@@ -13,6 +13,9 @@ Clauses
             (-p[k][v][t]  v  OR_{e incident to v} x[e][t]  v  p[k][v][t+1])
     move    p[k][u][t] and x[(u,v)][t]  ->  p[k][v][t+1]
     amo     per token k and time t: at most one v with p[k][v][t]
+            (pairwise, O(n^2) clauses per token-time, for n <= 60; the
+            sequential counter of Sinz 2005, O(n) clauses with n-1
+            auxiliaries, above that -- amo="pairwise" | "seq" | None = auto)
 
 Soundness.  Layer 0 is fixed by `init`.  Given layer t and the matching
 x[.][t], `stay`/`move` force each token's true successor position and `amo`
@@ -42,8 +45,9 @@ from .winding import face_ring
 # --- encoding ---------------------------------------------------------------
 
 class Encoding:
-    def __init__(self, n, edges, target, T):
+    def __init__(self, n, edges, target, T, amo=None):
         self.n, self.T = n, T
+        self.amo = amo or ("pairwise" if n <= 60 else "seq")
         self.edges = [tuple(sorted(e)) for e in edges]
         self.target = None if target is None else list(target)
         self.nv = 0
@@ -97,8 +101,29 @@ class Encoding:
         # amo: one position per token per time
         for k in range(n):
             for t in range(T + 1):
-                for v, w in combinations(range(n), 2):
-                    C.append([-p[(k, v, t)], -p[(k, w, t)]])
+                lits = [p[(k, v, t)] for v in range(n)]
+                if self.amo == "pairwise":
+                    for a, b in combinations(lits, 2):
+                        C.append([-a, -b])
+                else:
+                    self._amo_seq(lits)
+
+    def _amo_seq(self, lits):
+        """Sinz's sequential counter: s_i = "some literal among the first i
+        is true"; a second true literal would need s_{i-1} and x_i at once."""
+        C = self.clauses
+        m = len(lits)
+        if m <= 1:
+            return
+        s_prev = self._new()
+        C.append([-lits[0], s_prev])
+        for i in range(1, m - 1):
+            s_i = self._new()
+            C.append([-lits[i], s_i])
+            C.append([-s_prev, s_i])
+            C.append([-lits[i], -s_prev])
+            s_prev = s_i
+        C.append([-lits[m - 1], -s_prev])
 
     def schedule(self, model):
         pos = {abs(l): l > 0 for l in model}
@@ -127,11 +152,11 @@ def replay(n, sched, target):
     return list(state) == list(target)
 
 
-def check(n, edges, target, T, solver="cadical195", proof=None):
+def check(n, edges, target, T, solver="cadical195", proof=None, amo=None):
     """Return (sat, schedule_or_None, seconds, stats).  A SAT schedule is
     replayed independently; a replay failure raises."""
     t0 = time.perf_counter()
-    enc = Encoding(n, edges, target, T)
+    enc = Encoding(n, edges, target, T, amo=amo)
     kw = {"name": solver, "bootstrap_with": enc.clauses}
     if proof:
         kw["with_proof"] = True
@@ -149,7 +174,7 @@ def check(n, edges, target, T, solver="cadical195", proof=None):
         stats = s.accum_stats()
     return sat, sched, time.perf_counter() - t0, {"vars": enc.nv,
                                                    "clauses": len(enc.clauses),
-                                                   **stats}
+                                                   "amo": enc.amo, **stats}
 
 
 def lower_bound(n, edges, target):
