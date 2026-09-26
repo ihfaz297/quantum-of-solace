@@ -10,7 +10,9 @@ the fewest *rounds*, each round a matching of simultaneous swaps. The repository
 holds the thesis documents and `pts/`, a pure-Python package whose job is to
 machine-check every claim the documents make.
 
-`REFINED_PROPOSAL.md` is the authoritative statement of what is proved, what is
+`RESEARCH_ROADMAP.md` is the map for team members: the problem, the status
+table, what each result means, benchmarks, milestones and open questions;
+keep it current when a label changes. `REFINED_PROPOSAL.md` is the authoritative statement of what is proved, what is
 verified, what is open, and why. `REVIEW.md` is the audit of the older proof note
 `heavy-hex-approximation-proof.md` (which contains known errors — see REVIEW.md
 §2, §4, §6 before trusting anything in it). `fork.txt.txt` is a superseded, wrong
