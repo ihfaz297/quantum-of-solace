@@ -520,9 +520,11 @@ at `T = 12`, schedule replayed and archived. `OPT = 12` at `LB = 1`:
 The full `3x3` boundary and the opposite notch behave the same; the other two
 corners rotate in 11; every two-row patch is 11 throughout. So the extra
 round needs three rows of faces, and the obstruction is not a winding
-argument. The notched boundaries of `3x4` (`n = 87`) and `4x4` (`n = 111`) cost
-exactly 12 as well (`UNSAT` at 11, `SAT` at 12), so no growth beyond 12 at
-those sizes. The whole `3x3` slice at `T = 12` is `SAT` throughout (288
+argument. The notched boundaries of `3x4` (`n = 87`), `4x4` (`n = 111`), `5x3`
+(`n = 106`) and `5x5` (`n = 164`) all cost exactly 12 as well (`UNSAT` at 11,
+`SAT` at 12), and the full `5x5` boundary is `SAT` at 12: no growth beyond
+12 along that family at any size tried. The `4x3` slice is counted at 15.9
+million instances and not run. The whole `3x3` slice at `T = 12` is `SAT` throughout (288
 cycles, 85,062 instances, 67 min): **`sigma = 12` exactly on the `LB = 1`
 slice of the `3x3` patch.** Suite section
 "Witness" replays the 12-round schedule and, in the full run, re-derives the

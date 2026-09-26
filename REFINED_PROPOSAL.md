@@ -533,9 +533,23 @@ boundary (44-cycle, `UNSAT` at 11 in 141 s, `SAT` at 12) and for the notch
 at the opposite corner (all faces but face 0, `UNSAT` at 11 in 116 s); the
 notches at the other two corners are 44-cycles and rotate in 11. A 36-cycle
 of the same patch (faces 1–5, 7, 8) has 64 of its 2,704 interior systems
-above 11 on the whole patch. The `3 × 4` (`n = 87`) and `4 × 4` (`n = 111`)
-notched boundaries are `UNSAT` at 11 (103 s, 86 s) and `SAT` at 12: `OPT = 12`
-there as well, so no growth beyond 12 at these sizes. Every two-row patch is exactly 11 on its whole `LB = 1` slice
+above 11 on the whole patch. The same notched boundary on larger patches
+stops at 12 every time (`UNSAT` at 11, `SAT` at 12, whole patch, CaDiCaL,
+schedules archived in `results/rot_*`):
+
+| patch | `n` | cycle | interior | `T = 11` | `T = 12` |
+|---|---|---|---|---|---|
+| `3 × 3` | 68 | 40 | 21 | `UNSAT` 61 s | `SAT` |
+| `3 × 4` | 87 | 48 | 32 | `UNSAT` 103 s | `SAT` |
+| `4 × 4` | 111 | 64 | 47 | `UNSAT` 86 s | `SAT` |
+| `5 × 3` | 106 | 56 | 43 | `UNSAT` 84 s | `SAT` |
+| `5 × 5` | 164 | 72 | 85 | `UNSAT` 74 s | `SAT` (and at 13) |
+
+The full `5 × 5` boundary (76-cycle) is `SAT` at 12 as well. Instances above
+`n = 60` use a sequential-counter at-most-one encoding (validated against the
+pairwise one on 16 small instances and on the witness itself). So along this
+family the stretch does not grow with the patch: it is 12 from three rows
+up, at every size tried, on up to 164 qubits. Every two-row patch is exactly 11 on its whole `LB = 1` slice
 (Corollary B5), so this is a height phenomenon: three rows of faces are
 needed. **And 12 is the maximum there:** the whole `LB = 1` slice of the
 `3 × 3` patch at `T = 12` — 288 cycles, 85,062 instances, interiors up to 24
@@ -573,7 +587,8 @@ is now the theory half of RQ1.
 | `σ(heavy-hex) ≥ 12` | VERIFIED by SAT: `UNSAT` at 11 by CaDiCaL (DRAT) and glucose4, `SAT` at 12 replayed | suite "Witness"; `results/witness_7_3_*` |
 | `σ(heavy-hex) = 11` | **REFUTED** (Corollary B6) | — |
 | `σ = 12` on the `LB = 1` slice of the `3 × 3` patch | VERIFIED by `pts.lb1`: 85,062 instances all `SAT` at 12, plus the witness at 11 | `results/lb1_7_3_T12.jsonl`; suite "Witness" |
-| `σ(heavy-hex) = 12`; bounded at all | OPEN (RQ1); the `3 × 4` and `4 × 4` notched boundaries cost exactly 12 | `results/rot_*` |
+| `σ = 12` on the `LB = 1` slice of every patch | CONJECTURED: the notched boundary costs exactly 12 on `3 × 3`, `3 × 4`, `4 × 4`, `5 × 3`, `5 × 5`; the `4 × 3` slice (15.9 M instances) is counted, not run | `results/rot_*` |
+| `σ(heavy-hex) = 12`; bounded at all | OPEN (RQ1) | — |
 | `σ(square grids) ≥ 4` | PROVED by computation | suite "Section 5 table" |
 | `OPT_Γ(σ_r) = O(OPT_X(π))` | OPEN (RQ2b) | — |
 | patch formula = 2-core count | VERIFIED 6 shapes | suite "Patch model" |
@@ -596,10 +611,13 @@ its first 160 cycles, a 40-cycle whose rotation needs 12 rounds, certified
 `UNSAT` at 11 by two solvers and `SAT` at 12 by a replayed schedule. What
 RQ1 asks now is, in order: (a) *is 12 the maximum on the `3 × 3` slice?* —
 **yes**: all 85,062 instances are `SAT` at 12 (Corollary B6); (b) *does the stretch grow with the
-patch?* — the `3 × 4` and `4 × 4` notched boundaries cost exactly 12, so
-not at those sizes along that family; the long cycles of `4 × 4`, `5 × 3` and
-`5 × 5` at `T = 12` and `13` are the next probes (the encoding needs a linear
-at-most-one for `n > 100`); a growing sequence would mean the stretch factor of `d_max` on
+patch?* — not along the notched-boundary family: `3 × 4`, `4 × 4`, `5 × 3`
+and `5 × 5` (164 qubits) all cost exactly 12, and the full `5 × 5` boundary
+is `SAT` at 12. The whole `LB = 1` slice of `4 × 3` is counted at 15,852,838
+instances (one 52-cycle alone has 6.6 million), about 180 core-hours, and is
+not enumerated; growth beyond 12, if any, would have to come from a cycle
+family not yet probed, and the evidence so far is CONJECTURED `σ = 12` on
+the `LB = 1` slice of every patch; a growing sequence would mean the stretch factor of `d_max` on
 heavy-hex is unbounded, i.e. no bound of the form `c · LB` exists at all and
 the additive `c₂ · h` term of Theorem A is genuinely necessary; (c) *what is
 the obstruction?* — a lower-bound argument that sees the twelfth round,
@@ -789,7 +807,7 @@ each is a test that passes or does not.
 | risk | assessment | mitigation |
 |---|---|---|
 | Hard theory (RQ2b, reverse reduction) does not close | likely; may be equivalent to an open problem | gated; Target does not depend on it; eight-week box |
-| The `LB = 1` enumeration is too large on larger patches | real: the locality reduction leaves one call per (cycle, `LB = 1` permutation of its interior), and the cycle count grows with the face subsets — 14 on `2 × 2`, 46 on `3 × 2`, 133 on `4 × 2`, 288 on `3 × 3`, 364 on `5 × 2` — and the interior permutations with it (97,069 instances on `5 × 2`, 84 min with the incremental solver; `UNSAT` verdicts cost a minute each and are the interesting ones) | run patches in increasing size and archive each (resumable logs, shards on GitHub Actions); cap at the gate; whatever the last completed patch is, RQ1 is stated for its slice and CONJECTURED beyond |
+| The `LB = 1` enumeration is too large on larger patches | real, and now the binding limit: 14 cycles on `2 × 2`, 46 on `3 × 2`, 133 on `4 × 2`, 288 on `3 × 3`, 364 on `5 × 2`, 1,652 on `4 × 3` — and the interior permutations with it: 97,069 instances on `5 × 2` (84 min), 85,062 on `3 × 3` (67 min), **15,852,838 on `4 × 3`** (about 180 core-hours, one cycle alone 6.6 M; not run) | run patches in increasing size and archive each (resumable logs, shards on GitHub Actions); cap at the gate; whatever the last completed patch is, RQ1 is stated for its slice and CONJECTURED beyond |
 | Pendant extension is not routine | real; it changes fiber size, phase count and constants | three weeks budgeted; fallback is the theorems for brick rectangles with pendants handled by a trivial pre/post phase, stated as such |
 | **Adjacent literature restates a result under different vocabulary** | *it happened once*: Yuan–Zhang say "brick wall", never "hex", and are uncited by BGS | monitor by *structure*: "routing number", "routing via matchings", "permutation routing", "brick wall" + routing; citations to *both* arXiv:2411.18581 and arXiv:2402.02403 in OpenAlex, Semantic Scholar and OpenCitations (they disagree by 5× on the same paper) plus one non-arXiv index; confirm Theorem 9 is in Yuan–Zhang v1 for the priority date |
 | Scooped on RQ1/RQ2 exactly | moderate: BGS has 0–1 citations after 22 months and no follow-up, but Yuan–Zhang has 15 citers and 2026 routing-number papers use quotient machinery | theory note to the supervisor by week 14; preprint if the supervisor agrees (section 11) |
